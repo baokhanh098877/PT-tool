@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dinh Dưỡng & TDEE</title>
+<title>Công Cụ Dinh Dưỡng Pro</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -14,16 +14,23 @@
   --protein:#4fb5ff;--carb:#ffb84f;--fat:#4fffb0;
   --danger:#ff6b6b;--warn:#ffb84f;--ok:#4fffb0;
 }
-body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:0 0 6rem}
+body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.key-field:focus{border-color:var(--accent2)}
+25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+#app{display:block;padding-bottom:6rem}
+.topbar{background:var(--card);border-bottom:1px solid var(--border);padding:.7rem 1rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.topbar-brand{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.15em;color:var(--muted);text-transform:uppercase}
+.topbar-user{font-size:11px;color:var(--accent)}
+.expiry-bar{background:rgba(255,184,79,.07);border-bottom:1px solid rgba(255,184,79,.2);padding:8px 1rem;font-size:12px;color:var(--amber);text-align:center;display:none}
 .container{max-width:720px;margin:0 auto;padding:0 1rem}
-.tab-nav{display:flex;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg);z-index:10}
-.tab-btn{flex:1;padding:14px 6px;font-family:'Sora',sans-serif;font-size:12px;font-weight:600;color:var(--muted);background:none;border:none;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s}
+.tab-nav{display:flex;border-bottom:1px solid var(--border);position:sticky;top:40px;background:var(--bg);z-index:10}
+.tab-btn{flex:1;padding:13px 6px;font-family:'Sora',sans-serif;font-size:12px;font-weight:600;color:var(--muted);background:none;border:none;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s}
 .tab-btn.active{color:var(--accent);border-bottom-color:var(--accent)}
 .tab-pane{display:none;padding:1.4rem 0}
 .tab-pane.active{display:block}
-.hero{text-align:center;padding:1.6rem 0 1.2rem}
-.badge{display:inline-block;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;color:var(--accent);border:1px solid var(--accent);padding:3px 12px;border-radius:99px;margin-bottom:.8rem;text-transform:uppercase}
-h1{font-size:clamp(1.5rem,5vw,2.2rem);font-weight:700;line-height:1.15;letter-spacing:-.02em;margin-bottom:.3rem}
+.hero{text-align:center;padding:1.5rem 0 1rem}
+.badge{display:inline-block;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;color:var(--accent);border:1px solid var(--accent);padding:3px 12px;border-radius:99px;margin-bottom:.7rem;text-transform:uppercase}
+h1{font-size:clamp(1.4rem,5vw,2rem);font-weight:700;line-height:1.15;letter-spacing:-.02em;margin-bottom:.3rem}
 h1 span{color:var(--accent)}
 .sub{font-size:12px;color:var(--muted);font-weight:300}
 .panel{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.3rem;margin-bottom:.9rem}
@@ -90,7 +97,7 @@ input[type=range]:disabled::-webkit-slider-thumb{background:var(--muted);box-sha
 .search-inp{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:9px 13px;color:var(--text);font-family:'Sora',sans-serif;font-size:13px;outline:none;margin-bottom:9px}
 .search-inp:focus{border-color:var(--accent2)}
 .cat-row{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:9px}
-.cat-btn{padding:4px 11px;border:0.5px solid var(--border);border-radius:99px;background:var(--surface);color:var(--muted);font-size:11px;cursor:pointer;transition:all .15s}
+.cat-btn{padding:4px 11px;border:.5px solid var(--border);border-radius:99px;background:var(--surface);color:var(--muted);font-size:11px;cursor:pointer;transition:all .15s}
 .cat-btn.on{background:rgba(79,181,255,.1);color:var(--accent2);border-color:var(--accent2)}
 .food-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(135px,1fr));gap:6px;margin-bottom:1rem;max-height:220px;overflow-y:auto;padding-right:2px}
 .food-grid::-webkit-scrollbar{width:4px}
@@ -134,190 +141,225 @@ footer{text-align:center;margin-top:2rem;font-size:10px;color:var(--muted);font-
 </head>
 <body>
 
-<div class="tab-nav">
-  <button class="tab-btn active" onclick="switchTab('tdee')">Tính TDEE</button>
-  <button class="tab-btn" onclick="switchTab('food')">Theo dõi bữa ăn</button>
-</div>
+<!-- LOCK SCREEN -->
+<!-- APP -->
 
-<div class="container">
-
-<!-- ══════════ TAB 1 ══════════ -->
-<div class="tab-pane active" id="tab-tdee">
-  <div class="hero">
-    <div class="badge">Bước 1</div>
-    <h1>Tính <span>TDEE</span> của bạn</h1>
-    <p class="sub">Calo cá nhân hoá theo thành phần cơ thể & bệnh lý</p>
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-brand">PT Nutrition Pro</div>
+    <div class="topbar-user">PT Nutrition Pro</div>
   </div>
+  <div class="expiry-bar" id="expiryBar"></div>
 
-  <!-- CƠ BẢN -->
-  <div class="panel">
-    <p class="ptitle">Thông số cơ bản</p>
-    <div class="field">
-      <div class="field-top"><span class="flabel">Cân nặng</span><span class="fval"><em id="wVal">65</em> kg</span></div>
-      <input type="range" id="weight" min="40" max="130" value="65" step="1" oninput="calc()">
+  <div class="container">
+    <div class="tab-nav">
+      <button class="tab-btn active" onclick="switchTab('tdee')">Tính TDEE</button>
+      <button class="tab-btn" onclick="switchTab('food')">Theo dõi bữa ăn</button>
+      <button class="tab-btn" onclick="switchTab('meal')">Kế hoạch bữa ăn</button>
     </div>
-    <div class="field">
-      <div class="field-top"><span class="flabel">Chiều cao</span><span class="fval"><em id="hVal">163</em> cm</span></div>
-      <input type="range" id="height" min="145" max="200" value="163" step="1" oninput="calc()">
-    </div>
-    <div class="field">
-      <div class="field-top"><span class="flabel">Tuổi</span><span class="fval"><em id="aVal">28</em></span></div>
-      <input type="range" id="age" min="18" max="65" value="28" step="1" oninput="calc()">
-    </div>
-    <div class="field">
-      <p class="flabel" style="margin-bottom:7px">Giới tính</p>
-      <div class="tog-group tog-2">
-        <button class="tog-btn on" id="btn-male" onclick="setGender('male')">Nam</button>
-        <button class="tog-btn" id="btn-female" onclick="setGender('female')">Nữ</button>
+
+    <!-- TAB 1: TDEE -->
+    <div class="tab-pane active" id="tab-tdee">
+      <div class="hero">
+        <div class="badge">Bước 1</div>
+        <h1>Tính <span>TDEE</span> của bạn</h1>
+        <p class="sub">Calo cá nhân hoá theo thành phần cơ thể & bệnh lý</p>
+      </div>
+
+      <div class="panel">
+        <p class="ptitle">Thông số cơ bản</p>
+        <div class="field">
+          <div class="field-top"><span class="flabel">Cân nặng</span><span class="fval"><em id="wVal">65</em> kg</span></div>
+          <input type="range" id="weight" min="40" max="130" value="65" step="1" oninput="calc()">
+        </div>
+        <div class="field">
+          <div class="field-top"><span class="flabel">Chiều cao</span><span class="fval"><em id="hVal">163</em> cm</span></div>
+          <input type="range" id="height" min="145" max="200" value="163" step="1" oninput="calc()">
+        </div>
+        <div class="field">
+          <div class="field-top"><span class="flabel">Tuổi</span><span class="fval"><em id="aVal">28</em></span></div>
+          <input type="range" id="age" min="18" max="65" value="28" step="1" oninput="calc()">
+        </div>
+        <div class="field">
+          <p class="flabel" style="margin-bottom:7px">Giới tính</p>
+          <div class="tog-group tog-2">
+            <button class="tog-btn on" id="btn-male" onclick="setGender('male')">Nam</button>
+            <button class="tog-btn" id="btn-female" onclick="setGender('female')">Nữ</button>
+          </div>
+        </div>
+        <div class="field" style="margin-bottom:0">
+          <p class="flabel" style="margin-bottom:7px">Mức độ hoạt động</p>
+          <div class="tog-group tog-4">
+            <button class="tog-btn" data-act="1.2" onclick="setAct(this)">Ngồi nhiều<br><span style="font-size:10px">Ít/không tập</span></button>
+            <button class="tog-btn on" data-act="1.375" onclick="setAct(this)">Tập nhẹ<br><span style="font-size:10px">1–3 buổi/tuần</span></button>
+            <button class="tog-btn" data-act="1.55" onclick="setAct(this)">Tập vừa<br><span style="font-size:10px">3–5 buổi/tuần</span></button>
+            <button class="tog-btn" data-act="1.725" onclick="setAct(this)">Tập nặng<br><span style="font-size:10px">6–7 buổi/tuần</span></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <p class="ptitle">Thành phần cơ thể <span style="font-weight:400;color:#4a5060">(tuỳ chọn · tick nếu có InBody)</span></p>
+        <div class="field">
+          <label class="chk-row">
+            <input class="chk-box" type="checkbox" id="chk-bf" onchange="toggleOpt('bf')">
+            <span class="chk-label" id="lbl-bf">% Mỡ cơ thể</span>
+            <span style="margin-left:auto;font-family:'DM Mono',monospace;font-size:13px" id="bfDisp">—</span>
+          </label>
+          <input type="range" id="bodyfat" min="5" max="50" value="20" step="0.5" oninput="calc()" disabled>
+        </div>
+        <div class="field" style="margin-bottom:0">
+          <label class="chk-row">
+            <input class="chk-box" type="checkbox" id="chk-smm" onchange="toggleOpt('smm')">
+            <span class="chk-label" id="lbl-smm">Khối lượng cơ (SMM)</span>
+            <span style="margin-left:auto;font-family:'DM Mono',monospace;font-size:13px" id="smmDisp">—</span>
+          </label>
+          <input type="range" id="smm" min="10" max="65" value="29" step="0.1" oninput="calc()" disabled>
+        </div>
+        <div id="bodyPanel" style="display:none;margin-top:1rem">
+          <div class="res-grid rg4" style="margin-bottom:.8rem">
+            <div class="rcard"><p class="rlabel">Mỡ (kg)</p><p class="rval" id="fatKgV">—</p></div>
+            <div class="rcard"><p class="rlabel">% Mỡ</p><p class="rval" id="fatPctV">—</p></div>
+            <div class="rcard"><p class="rlabel">Cơ nạc (kg)</p><p class="rval" id="leanV">—</p></div>
+            <div class="rcard hi2"><p class="rlabel">SMM (kg)</p><p class="rval" id="smmV">—</p></div>
+          </div>
+          <div class="tip-box tip-blue" id="bodyRating"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <p class="ptitle">Mục tiêu</p>
+        <div class="goal-group">
+          <button class="goal-btn" id="g-lose" onclick="setGoal('lose')"><span class="gi">🔥</span>Giảm mỡ<span class="gd">−500 kcal</span></button>
+          <button class="goal-btn on" id="g-maintain" onclick="setGoal('maintain')"><span class="gi">⚖️</span>Duy trì<span class="gd">= TDEE</span></button>
+          <button class="goal-btn" id="g-gain" onclick="setGoal('gain')"><span class="gi">💪</span>Tăng cơ<span class="gd">+300 kcal</span></button>
+        </div>
+        <div class="res-grid rg3">
+          <div class="rcard"><p class="rlabel">BMR</p><p class="rval" id="bmrVal">—</p><p class="runit">kcal/ngày</p></div>
+          <div class="rcard"><p class="rlabel">TDEE</p><p class="rval" id="tdeeVal">—</p><p class="runit">kcal/ngày</p></div>
+          <div class="rcard hi"><p class="rlabel">Mục tiêu</p><p class="rval" id="targetVal">—</p><p class="runit">kcal/ngày</p></div>
+        </div>
+        <div class="tip-box tip-green" id="tipBox"></div>
+      </div>
+
+      <div class="panel">
+        <p class="ptitle">Phân bổ dinh dưỡng / ngày</p>
+        <div class="mrow"><span class="mname" style="color:var(--protein)">Protein</span><div class="btrack"><div class="bfill" id="tpBar" style="background:var(--protein)"></div></div><div class="mnums"><div class="mg" id="tpG">—</div><div class="mkcal" id="tpKcal">—</div></div></div>
+        <div class="mrow"><span class="mname" style="color:var(--carb)">Tinh bột</span><div class="btrack"><div class="bfill" id="tcBar" style="background:var(--carb)"></div></div><div class="mnums"><div class="mg" id="tcG">—</div><div class="mkcal" id="tcKcal">—</div></div></div>
+        <div class="mrow"><span class="mname" style="color:var(--fat)">Chất béo</span><div class="btrack"><div class="bfill" id="tfBar" style="background:var(--fat)"></div></div><div class="mnums"><div class="mg" id="tfG">—</div><div class="mkcal" id="tfKcal">—</div></div></div>
+        <hr>
+        <button class="sync-btn" onclick="syncToTracker()">Dùng số này cho bữa ăn →</button>
+      </div>
+
+      <div class="panel">
+        <p class="ptitle">Bệnh lý / Tình trạng đặc biệt</p>
+        <p style="font-size:11px;color:var(--muted);margin-bottom:.9rem">Chọn nếu có — calo & protein tự điều chỉnh, thực phẩm cần tránh sẽ được đánh dấu ⚠</p>
+        <div class="cond-grid">
+          <button class="cond-btn" data-cond="diabetes" onclick="toggleCond(this)"><span class="ci">🩸</span>Tiểu đường / Kháng insulin</button>
+          <button class="cond-btn" data-cond="hypertension" onclick="toggleCond(this)"><span class="ci">❤️</span>Huyết áp cao</button>
+          <button class="cond-btn" data-cond="gout" onclick="toggleCond(this)"><span class="ci">🦵</span>Gout</button>
+          <button class="cond-btn" data-cond="cholesterol" onclick="toggleCond(this)"><span class="ci">🫀</span>Mỡ máu cao</button>
+          <button class="cond-btn" data-cond="kidney" onclick="toggleCond(this)"><span class="ci">🫘</span>Thận yếu</button>
+          <button class="cond-btn" data-cond="liver" onclick="toggleCond(this)"><span class="ci">🟤</span>Gan nhiễm mỡ</button>
+          <button class="cond-btn" data-cond="gastric" onclick="toggleCond(this)"><span class="ci">🫄</span>Dạ dày / Trào ngược</button>
+          <button class="cond-btn" data-cond="thyroid" onclick="toggleCond(this)"><span class="ci">🦋</span>Tuyến giáp</button>
+        </div>
+        <div id="condBox" class="cond-box"></div>
       </div>
     </div>
-    <div class="field" style="margin-bottom:0">
-      <p class="flabel" style="margin-bottom:7px">Mức độ hoạt động</p>
-      <div class="tog-group tog-4">
-        <button class="tog-btn" data-act="1.2" onclick="setAct(this)">Ngồi nhiều<br><span style="font-size:10px">Ít/không tập</span></button>
-        <button class="tog-btn on" data-act="1.375" onclick="setAct(this)">Tập nhẹ<br><span style="font-size:10px">1–3 buổi/tuần</span></button>
-        <button class="tog-btn" data-act="1.55" onclick="setAct(this)">Tập vừa<br><span style="font-size:10px">3–5 buổi/tuần</span></button>
-        <button class="tog-btn" data-act="1.725" onclick="setAct(this)">Tập nặng<br><span style="font-size:10px">6–7 buổi/tuần</span></button>
+
+    <!-- TAB 2: FOOD -->
+    <div class="tab-pane" id="tab-food">
+      <div class="hero">
+        <div class="badge">Bước 2</div>
+        <h1>Theo dõi <span>bữa ăn</span></h1>
+        <p class="sub">Chọn thực phẩm · Chỉnh gram · Xem macro</p>
+      </div>
+      <div class="panel">
+        <p class="ptitle">Mục tiêu calo hôm nay</p>
+        <div class="target-row">
+          <label>Mục tiêu:</label>
+          <input type="number" id="foodTarget" value="1600" min="800" max="5000" step="50" oninput="renderLog()">
+          <span style="font-size:11px;color:var(--muted)">kcal</span>
+        </div>
+        <div id="condWarnBox" style="display:none" class="tip-box tip-warn"></div>
+      </div>
+      <div class="panel">
+        <p class="ptitle">Chọn thực phẩm</p>
+        <input class="search-inp" type="text" id="searchBox" placeholder="Tìm thực phẩm..." oninput="filterFoods()">
+        <div class="cat-row" id="catRow"></div>
+        <div class="food-grid" id="foodGrid"></div>
+      </div>
+      <div class="panel">
+        <p class="ptitle">Thực đơn hôm nay</p>
+        <div id="logList"><div class="log-empty">Chọn thực phẩm ở trên để thêm vào</div></div>
+        <hr>
+        <div class="sum-grid">
+          <div class="sc"><div class="sc-label">Calo</div><div class="sc-val" id="totK">0</div><div class="sc-unit">kcal</div></div>
+          <div class="sc"><div class="sc-label">Protein</div><div class="sc-val" id="totP">0</div><div class="sc-unit">g</div></div>
+          <div class="sc"><div class="sc-label">Tinh bột</div><div class="sc-val" id="totC">0</div><div class="sc-unit">g</div></div>
+          <div class="sc"><div class="sc-label">Chất béo</div><div class="sc-val" id="totF">0</div><div class="sc-unit">g</div></div>
+        </div>
+        <div class="prog-label"><span>Tiến độ calo</span><span id="progPct">0%</span></div>
+        <div class="prog-bg"><div class="prog-f" id="progBar" style="width:0%"></div></div>
+        <div class="status-msg" id="statusMsg"></div>
       </div>
     </div>
-  </div>
 
-  <!-- THÀNH PHẦN CƠ THỂ (TUỲ CHỌN) -->
-  <div class="panel">
-    <p class="ptitle">Thành phần cơ thể <span style="font-weight:400;color:#4a5060">(tuỳ chọn · tick nếu có InBody)</span></p>
-
-    <div class="field">
-      <label class="chk-row">
-        <input class="chk-box" type="checkbox" id="chk-bf" onchange="toggleOpt('bf')">
-        <span class="chk-label" id="lbl-bf">% Mỡ cơ thể</span>
-        <span style="margin-left:auto;font-family:'DM Mono',monospace;font-size:13px" id="bfDisp" style="color:var(--muted)">—</span>
-      </label>
-      <input type="range" id="bodyfat" min="5" max="50" value="20" step="0.5" oninput="calc()" disabled>
-    </div>
-
-    <div class="field" style="margin-bottom:0">
-      <label class="chk-row">
-        <input class="chk-box" type="checkbox" id="chk-smm" onchange="toggleOpt('smm')">
-        <span class="chk-label" id="lbl-smm">Khối lượng cơ SMM</span>
-        <span style="margin-left:auto;font-family:'DM Mono',monospace;font-size:13px" id="smmDisp">—</span>
-      </label>
-      <input type="range" id="smm" min="10" max="65" value="29" step="0.1" oninput="calc()" disabled>
-    </div>
-
-    <div id="bodyPanel" style="display:none;margin-top:1rem">
-      <div class="res-grid rg4" style="margin-bottom:.8rem">
-        <div class="rcard"><p class="rlabel">Mỡ (kg)</p><p class="rval" id="fatKgV">—</p></div>
-        <div class="rcard"><p class="rlabel">% Mỡ</p><p class="rval" id="fatPctV">—</p></div>
-        <div class="rcard"><p class="rlabel">Cơ nạc (kg)</p><p class="rval" id="leanV">—</p></div>
-        <div class="rcard hi2"><p class="rlabel">SMM (kg)</p><p class="rval" id="smmV">—</p></div>
+    <!-- TAB 3: MEAL PLAN -->
+    <div class="tab-pane" id="tab-meal">
+      <div class="hero">
+        <div class="badge">Bước 3</div>
+        <h1>Kế hoạch <span>bữa ăn</span></h1>
+        <p class="sub">Chia đồ ăn đã chọn vào 6 bữa trong ngày</p>
       </div>
-      <div class="tip-box tip-blue" id="bodyRating" style="font-size:11.5px"></div>
-    </div>
-  </div>
 
-  <!-- MỤC TIÊU & KẾT QUẢ -->
-  <div class="panel">
-    <p class="ptitle">Mục tiêu</p>
-    <div class="goal-group">
-      <button class="goal-btn" id="g-lose" onclick="setGoal('lose')"><span class="gi">🔥</span>Giảm mỡ<span class="gd">−500 kcal</span></button>
-      <button class="goal-btn on" id="g-maintain" onclick="setGoal('maintain')"><span class="gi">⚖️</span>Duy trì<span class="gd">= TDEE</span></button>
-      <button class="goal-btn" id="g-gain" onclick="setGoal('gain')"><span class="gi">💪</span>Tăng cơ<span class="gd">+300 kcal</span></button>
-    </div>
-    <div class="res-grid rg3">
-      <div class="rcard"><p class="rlabel">BMR</p><p class="rval" id="bmrVal">—</p><p class="runit">kcal/ngày</p></div>
-      <div class="rcard"><p class="rlabel">TDEE</p><p class="rval" id="tdeeVal">—</p><p class="runit">kcal/ngày</p></div>
-      <div class="rcard hi"><p class="rlabel">Mục tiêu</p><p class="rval" id="targetVal">—</p><p class="runit">kcal/ngày</p></div>
-    </div>
-    <div class="tip-box tip-green" id="tipBox" style="margin-bottom:0"></div>
-  </div>
+      <div class="panel" id="mealEmptyMsg" style="display:none">
+        <p style="font-size:13px;color:var(--muted);text-align:center;padding:1.5rem 0">
+          Chưa có đồ ăn nào — hãy chọn thực phẩm ở tab<br>
+          <strong style="color:var(--accent)">Theo dõi bữa ăn</strong> trước rồi quay lại đây!
+        </p>
+      </div>
 
-  <!-- MACRO -->
-  <div class="panel">
-    <p class="ptitle">Phân bổ dinh dưỡng / ngày</p>
-    <div class="mrow"><span class="mname" style="color:var(--protein)">Protein</span><div class="btrack"><div class="bfill" id="tpBar" style="background:var(--protein)"></div></div><div class="mnums"><div class="mg" id="tpG">—</div><div class="mkcal" id="tpKcal">—</div></div></div>
-    <div class="mrow"><span class="mname" style="color:var(--carb)">Tinh bột</span><div class="btrack"><div class="bfill" id="tcBar" style="background:var(--carb)"></div></div><div class="mnums"><div class="mg" id="tcG">—</div><div class="mkcal" id="tcKcal">—</div></div></div>
-    <div class="mrow"><span class="mname" style="color:var(--fat)">Chất béo</span><div class="btrack"><div class="bfill" id="tfBar" style="background:var(--fat)"></div></div><div class="mnums"><div class="mg" id="tfG">—</div><div class="mkcal" id="tfKcal">—</div></div></div>
-    <hr>
-    <button class="sync-btn" onclick="syncToTracker()">Dùng số này cho bữa ăn →</button>
-  </div>
-
-  <!-- BỆNH LÝ -->
-  <div class="panel">
-    <p class="ptitle">Bệnh lý / Tình trạng đặc biệt</p>
-    <p style="font-size:11px;color:var(--muted);margin-bottom:.9rem">Chọn nếu có — calo & protein sẽ được điều chỉnh phù hợp, và công cụ sẽ đề xuất thực phẩm an toàn.</p>
-    <div class="cond-grid">
-      <button class="cond-btn" data-cond="diabetes" onclick="toggleCond(this)"><span class="ci">🩸</span>Tiểu đường / Kháng insulin</button>
-      <button class="cond-btn" data-cond="hypertension" onclick="toggleCond(this)"><span class="ci">❤️</span>Huyết áp cao</button>
-      <button class="cond-btn" data-cond="gout" onclick="toggleCond(this)"><span class="ci">🦵</span>Gout</button>
-      <button class="cond-btn" data-cond="cholesterol" onclick="toggleCond(this)"><span class="ci">🫀</span>Mỡ máu cao</button>
-      <button class="cond-btn" data-cond="kidney" onclick="toggleCond(this)"><span class="ci">🫘</span>Thận yếu</button>
-      <button class="cond-btn" data-cond="liver" onclick="toggleCond(this)"><span class="ci">🟤</span>Gan nhiễm mỡ</button>
-      <button class="cond-btn" data-cond="gastric" onclick="toggleCond(this)"><span class="ci">🫄</span>Dạ dày / Trào ngược</button>
-      <button class="cond-btn" data-cond="thyroid" onclick="toggleCond(this)"><span class="ci">🦋</span>Tuyến giáp</button>
+      <div id="mealPlanContent">
+        <div class="panel" style="margin-bottom:.7rem">
+          <p class="ptitle">Tổng quan hôm nay</p>
+          <div class="res-grid rg4" id="mealDaySummary" style="margin-bottom:0"></div>
+        </div>
+        <div id="mealBuaList"></div>
+      </div>
     </div>
-    <div id="condBox" class="cond-box"></div>
+
   </div>
+  <footer>Mifflin-St Jeor · Katch-McArdle (khi có SMM/% mỡ) · Số liệu tham khảo</footer>
 </div>
-
-<!-- ══════════ TAB 2 ══════════ -->
-<div class="tab-pane" id="tab-food">
-  <div class="hero">
-    <div class="badge">Bước 2</div>
-    <h1>Theo dõi <span>bữa ăn</span></h1>
-    <p class="sub">Chọn thực phẩm · Chỉnh gram · Xem macro</p>
-  </div>
-
-  <div class="panel">
-    <p class="ptitle">Mục tiêu calo hôm nay</p>
-    <div class="target-row">
-      <label>Mục tiêu:</label>
-      <input type="number" id="foodTarget" value="1600" min="800" max="5000" step="50" oninput="renderLog()">
-      <span style="font-size:11px;color:var(--muted)">kcal</span>
-    </div>
-    <div id="condWarnBox" style="display:none" class="tip-box tip-warn"></div>
-  </div>
-
-  <div class="panel">
-    <p class="ptitle">Chọn thực phẩm</p>
-    <input class="search-inp" type="text" id="searchBox" placeholder="Tìm thực phẩm..." oninput="filterFoods()">
-    <div class="cat-row" id="catRow"></div>
-    <div class="food-grid" id="foodGrid"></div>
-  </div>
-
-  <div class="panel">
-    <p class="ptitle">Thực đơn hôm nay</p>
-    <div id="logList"><div class="log-empty">Chọn thực phẩm ở trên để thêm vào</div></div>
-    <hr>
-    <div class="sum-grid">
-      <div class="sc"><div class="sc-label">Calo</div><div class="sc-val" id="totK">0</div><div class="sc-unit">kcal</div></div>
-      <div class="sc"><div class="sc-label">Protein</div><div class="sc-val" id="totP">0</div><div class="sc-unit">g</div></div>
-      <div class="sc"><div class="sc-label">Tinh bột</div><div class="sc-val" id="totC">0</div><div class="sc-unit">g</div></div>
-      <div class="sc"><div class="sc-label">Chất béo</div><div class="sc-val" id="totF">0</div><div class="sc-unit">g</div></div>
-    </div>
-    <div class="prog-label"><span>Tiến độ calo</span><span id="progPct">0%</span></div>
-    <div class="prog-bg"><div class="prog-f" id="progBar" style="width:0%"></div></div>
-    <div class="status-msg" id="statusMsg"></div>
-  </div>
-</div>
-
-</div>
-<footer>Mifflin-St Jeor (cơ bản) · Katch-McArdle (khi có SMM/% mỡ)<br>Số liệu tham khảo · Hỏi bác sĩ / chuyên gia dinh dưỡng nếu có bệnh lý trước khi thay đổi chế độ ăn</footer>
 
 <script>
+/* ════════════════════════════════════════
+   INIT — không cần khoá, Google Sites quản lý
+════════════════════════════════════════ */
+window.addEventListener('load', function(){
+  document.getElementById('app').style.display='block';
+  calc();
+  initCats();
+});
+
+/* ════════════════════════════════════════
+   APP
+════════════════════════════════════════ */
 let gender='male',activity=1.375,goal='maintain';
 let useBF=false,useSMM=false;
-let activeCond=new Set();
-let activeCat='Tất cả',foodLog=[],nextId=0,tdeeTarget=1600;
+let activeCond=new Set(),activeCat='Tất cả',foodLog=[],nextId=0,tdeeTarget=1600;
 
 const CONDITIONS={
-  diabetes:{label:'Tiểu đường / Kháng insulin',note:'Ưu tiên GI thấp, kiểm soát tinh bột, chia nhiều bữa nhỏ.',avoid:['Cơm trắng','Bún tươi','Bánh mì trắng','Xoài','Nho','Dứa','Chuối'],prefer:['Cơm gạo lứt','Khoai lang','Yến mạch','Ổi','Táo','Bông cải xanh','Rau muống','Ức gà','Cá basa','Hạt chia'],calAdj:0,pMult:1.8,macroNote:'Tinh bột ≤40% tổng calo. Ưu tiên protein & chất béo lành mạnh để kiểm soát đường huyết.'},
-  hypertension:{label:'Huyết áp cao',note:'Giảm natri, tăng kali. Tránh thực phẩm chế biến nhiều muối.',avoid:['Ba chỉ heo','Sườn heo','Thịt heo xay','Bơ lạt','Dầu dừa'],prefer:['Cá hồi','Cá ngừ','Bông cải xanh','Cà rốt','Chuối','Hạt chia','Hạt óc chó','Đậu phụ','Rau bina','Khoai lang'],calAdj:0,pMult:1.6,macroNote:'Hạn chế natri <2g/ngày. Tăng kali (chuối, khoai lang) và omega-3 (cá hồi, hạt chia).'},
-  gout:{label:'Gout',note:'Tránh thực phẩm giàu purine. Uống đủ nước ≥2.5L/ngày.',avoid:['Thịt bò nạc','Sườn bò','Ba chỉ heo','Sườn heo','Tôm','Cá ngừ','Cá hồi','Hạt mắc ca','Đậu phộng'],prefer:['Ức gà','Trứng gà','Đậu phụ','Khoai lang','Cơm gạo lứt','Cà chua','Dưa leo','Bông cải xanh','Táo','Ổi'],calAdj:0,pMult:1.2,macroNote:'Protein tổng không nên vượt 1.2g/kg. Ưu tiên protein thực vật và trứng. Uống ≥2.5L nước/ngày.'},
-  cholesterol:{label:'Mỡ máu cao',note:'Giảm chất béo bão hòa, tăng omega-3 và chất xơ.',avoid:['Ba chỉ heo','Sườn heo','Sườn bò','Bơ lạt','Dầu dừa','Hạt mắc ca'],prefer:['Cá hồi','Cá basa','Ức gà','Hạt chia','Hạt óc chó','Hạnh nhân','Dầu olive','Bông cải xanh','Táo','Yến mạch'],calAdj:0,pMult:1.6,macroNote:'Chất béo bão hòa <7% tổng calo. Tăng omega-3 và chất xơ hòa tan (yến mạch, táo) để giảm LDL.'},
-  kidney:{label:'Thận yếu',note:'Kiểm soát protein, kali, phốt pho. Cần theo dõi bác sĩ.',avoid:['Protein shake','Hạt chia','Hạt óc chó','Hạt điều','Hạnh nhân','Chuối','Cam','Cà chua','Khoai tây'],prefer:['Cơm trắng','Bún tươi','Dưa leo','Xà lách','Bắp cải','Táo','Dưa hấu','Ức gà (ít)'],calAdj:0,pMult:0.8,macroNote:'Protein giới hạn 0.6–0.8g/kg (theo chỉ dẫn bác sĩ). Hạn chế kali và phốt pho. Cần tư vấn chuyên gia dinh dưỡng.'},
-  liver:{label:'Gan nhiễm mỡ',note:'Giảm mỡ bão hòa, đường đơn và calo tổng. Tăng chất xơ.',avoid:['Ba chỉ heo','Sườn heo','Bơ lạt','Dầu dừa','Xoài','Nho'],prefer:['Ức gà','Cá hồi','Đậu phụ','Bông cải xanh','Rau bina','Dầu olive','Táo','Hạt óc chó','Yến mạch'],calAdj:-100,pMult:1.5,macroNote:'Giảm thêm 100 kcal so với mục tiêu thông thường. Chất béo tổng <30% calo. Omega-3 và choline hỗ trợ phục hồi gan.'},
-  gastric:{label:'Dạ dày / Trào ngược',note:'Chia 5–6 bữa nhỏ. Tránh cay, chua, nhiều dầu mỡ.',avoid:['Ớt chuông','Cà chua','Cam','Dứa','Ba chỉ heo','Sườn heo','Đậu phộng'],prefer:['Cơm gạo lứt','Khoai lang','Yến mạch','Ức gà luộc','Cá basa hấp','Dưa leo','Bắp cải','Chuối','Sữa chua HL','Đậu phụ'],calAdj:0,pMult:1.6,macroNote:'Ăn 5–6 bữa nhỏ/ngày. Không ăn 2 giờ trước khi ngủ. Ưu tiên thức ăn mềm, ít dầu mỡ.'},
-  thyroid:{label:'Tuyến giáp (suy giáp)',note:'Trao đổi chất chậm hơn bình thường. Đã điều chỉnh giảm calo.',avoid:['Bắp cải sống','Bông cải xanh sống','Đậu phụ (nhiều)'],prefer:['Cá hồi','Cá ngừ','Tôm','Trứng gà','Hạt chia','Hạt bí ngô','Khoai lang','Táo','Rau bina'],calAdj:-150,pMult:1.7,macroNote:'Đã giảm 150 kcal cho suy giáp. Nếu cường giáp cộng thêm 200–300 kcal. Selen (cá hồi, tôm) quan trọng cho tuyến giáp.'},
+  diabetes:{label:'Tiểu đường / Kháng insulin',note:'Ưu tiên GI thấp, kiểm soát tinh bột, chia nhiều bữa nhỏ.',avoid:['Cơm trắng','Bún tươi','Bánh mì trắng','Xoài','Nho','Dứa','Chuối'],prefer:['Cơm gạo lứt','Khoai lang','Yến mạch','Ổi','Táo','Bông cải xanh','Ức gà','Hạt chia'],calAdj:0,pMult:1.8,macroNote:'Tinh bột ≤40% tổng calo.'},
+  hypertension:{label:'Huyết áp cao',note:'Giảm natri, tăng kali. Tránh chế biến sẵn nhiều muối.',avoid:['Ba chỉ heo','Sườn heo','Thịt heo xay','Bơ lạt','Dầu dừa'],prefer:['Cá hồi','Cá ngừ','Bông cải xanh','Chuối','Hạt chia','Đậu phụ','Rau bina'],calAdj:0,pMult:1.6,macroNote:'Natri <2g/ngày. Tăng kali và omega-3.'},
+  gout:{label:'Gout',note:'Tránh purine cao. Uống ≥2.5L nước/ngày.',avoid:['Thịt bò nạc','Sườn bò','Ba chỉ heo','Sườn heo','Tôm','Cá ngừ','Cá hồi','Hạt mắc ca'],prefer:['Ức gà','Trứng gà','Đậu phụ','Khoai lang','Dưa leo','Táo','Ổi'],calAdj:0,pMult:1.2,macroNote:'Protein ≤1.2g/kg. Ưu tiên protein thực vật.'},
+  cholesterol:{label:'Mỡ máu cao',note:'Giảm chất béo bão hòa, tăng omega-3 và chất xơ.',avoid:['Ba chỉ heo','Sườn heo','Sườn bò','Bơ lạt','Dầu dừa','Hạt mắc ca'],prefer:['Cá hồi','Ức gà','Hạt chia','Hạt óc chó','Dầu olive','Táo','Yến mạch'],calAdj:0,pMult:1.6,macroNote:'Chất béo bão hòa <7% tổng calo.'},
+  kidney:{label:'Thận yếu',note:'Kiểm soát protein, kali, phốt pho theo bác sĩ.',avoid:['Protein shake','Hạt chia','Hạt óc chó','Hạnh nhân','Chuối','Cam','Cà chua'],prefer:['Cơm trắng','Bún tươi','Dưa leo','Xà lách','Bắp cải','Táo','Dưa hấu'],calAdj:0,pMult:0.8,macroNote:'Protein 0.6–0.8g/kg theo bác sĩ.'},
+  liver:{label:'Gan nhiễm mỡ',note:'Giảm mỡ bão hòa và đường đơn.',avoid:['Ba chỉ heo','Sườn heo','Bơ lạt','Dầu dừa','Xoài','Nho'],prefer:['Ức gà','Cá hồi','Đậu phụ','Bông cải xanh','Dầu olive','Táo','Yến mạch'],calAdj:-100,pMult:1.5,macroNote:'Giảm thêm 100 kcal. Chất béo tổng <30%.'},
+  gastric:{label:'Dạ dày / Trào ngược',note:'Chia 5–6 bữa nhỏ. Tránh cay, chua, nhiều dầu.',avoid:['Ớt chuông','Cà chua','Cam','Dứa','Ba chỉ heo','Đậu phộng'],prefer:['Cơm gạo lứt','Khoai lang','Ức gà luộc','Cá basa hấp','Dưa leo','Chuối','Sữa chua HL'],calAdj:0,pMult:1.6,macroNote:'Ăn 5–6 bữa nhỏ/ngày.'},
+  thyroid:{label:'Tuyến giáp (suy giáp)',note:'Trao đổi chất chậm — đã giảm calo.',avoid:['Bắp cải sống','Bông cải xanh sống'],prefer:['Cá hồi','Cá ngừ','Tôm','Trứng gà','Hạt chia','Khoai lang','Rau bina'],calAdj:-150,pMult:1.7,macroNote:'Đã giảm 150 kcal cho suy giáp.'},
 };
 
 const FOODS=[
@@ -366,7 +408,7 @@ const FOODS=[
   {name:'Nấm đông cô',cat:'Rau củ',kcal:34,p:2.2,c:6.8,f:0.5,per:'100g'},
   {name:'Đậu bắp',cat:'Rau củ',kcal:33,p:1.9,c:7,f:0.2,per:'100g'},
   {name:'Giá đỗ',cat:'Rau củ',kcal:30,p:3,c:5.9,f:0.2,per:'100g'},
-  {name:'Chuối',cat:'Trái cây',kcal:89,p:1.1,c:23,f:0.3,per:'1 quả ~100g'},
+  {name:'Chuối',cat:'Trái cây',kcal:89,p:1.1,c:23,f:0.3,per:'1 quả'},
   {name:'Táo',cat:'Trái cây',kcal:52,p:0.3,c:14,f:0.2,per:'100g'},
   {name:'Cam',cat:'Trái cây',kcal:47,p:0.9,c:12,f:0.1,per:'100g'},
   {name:'Xoài',cat:'Trái cây',kcal:60,p:0.8,c:15,f:0.4,per:'100g'},
@@ -390,267 +432,281 @@ const FOODS=[
   {name:'Bơ lạt',cat:'Chất béo',kcal:717,p:0.9,c:0.1,f:81,per:'100g'},
   {name:'Dầu dừa',cat:'Chất béo',kcal:862,p:0,c:0,f:100,per:'100ml'},
 ];
-
 const CATS=['Tất cả',...[...new Set(FOODS.map(f=>f.cat))]];
 
 function switchTab(t){
-  document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',['tdee','food'][i]===t));
+  const tabs=['tdee','food','meal'];
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',tabs[i]===t));
   document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
   document.getElementById('tab-'+t).classList.add('active');
+  if(t==='meal') renderMealPlan();
 }
-
-function toggleOpt(type){
-  const chk=document.getElementById('chk-'+type);
-  const slider=document.getElementById(type==='bf'?'bodyfat':'smm');
-  const lbl=document.getElementById('lbl-'+type);
-  const on=chk.checked;
-  if(type==='bf') useBF=on; else useSMM=on;
-  slider.disabled=!on;
-  lbl.classList.toggle('on',on);
-  calc();
-  document.getElementById('bodyPanel').style.display=(useBF||useSMM)?'block':'none';
-}
-
-function setGender(g){
-  gender=g;
-  document.getElementById('btn-male').classList.toggle('on',g==='male');
-  document.getElementById('btn-female').classList.toggle('on',g==='female');
-  calc();
-}
-function setAct(btn){
-  activity=parseFloat(btn.dataset.act);
-  document.querySelectorAll('[data-act]').forEach(b=>b.classList.remove('on'));
-  btn.classList.add('on'); calc();
-}
-function setGoal(g){
-  goal=g;
-  ['lose','maintain','gain'].forEach(x=>document.getElementById('g-'+x).classList.remove('on'));
-  document.getElementById('g-'+g).classList.add('on'); calc();
-}
+function toggleOpt(type){const chk=document.getElementById('chk-'+type),slider=document.getElementById(type==='bf'?'bodyfat':'smm'),lbl=document.getElementById('lbl-'+type),on=chk.checked;if(type==='bf')useBF=on;else useSMM=on;slider.disabled=!on;lbl.classList.toggle('on',on);calc();document.getElementById('bodyPanel').style.display=(useBF||useSMM)?'block':'none';}
+function setGender(g){gender=g;document.getElementById('btn-male').classList.toggle('on',g==='male');document.getElementById('btn-female').classList.toggle('on',g==='female');calc();}
+function setAct(btn){activity=parseFloat(btn.dataset.act);document.querySelectorAll('[data-act]').forEach(b=>b.classList.remove('on'));btn.classList.add('on');calc();}
+function setGoal(g){goal=g;['lose','maintain','gain'].forEach(x=>document.getElementById('g-'+x).classList.remove('on'));document.getElementById('g-'+g).classList.add('on');calc();}
 
 function calc(){
-  const w=+document.getElementById('weight').value;
-  const h=+document.getElementById('height').value;
-  const a=+document.getElementById('age').value;
-  const bf=+document.getElementById('bodyfat').value;
-  const smm=+document.getElementById('smm').value;
-
-  document.getElementById('wVal').textContent=w;
-  document.getElementById('hVal').textContent=h;
-  document.getElementById('aVal').textContent=a;
-
-  const bfDisp=document.getElementById('bfDisp');
-  const smmDisp=document.getElementById('smmDisp');
-  if(useBF){bfDisp.textContent=bf.toFixed(1)+'%';bfDisp.style.color='var(--accent)';}
-  else{bfDisp.textContent='—';bfDisp.style.color='var(--muted)';}
-  if(useSMM){smmDisp.textContent=smm.toFixed(1)+' kg';smmDisp.style.color='var(--accent)';}
-  else{smmDisp.textContent='—';smmDisp.style.color='var(--muted)';}
-
-  /* BMR */
+  const w=+document.getElementById('weight').value,h=+document.getElementById('height').value,a=+document.getElementById('age').value;
+  const bf=+document.getElementById('bodyfat').value,smm=+document.getElementById('smm').value;
+  document.getElementById('wVal').textContent=w;document.getElementById('hVal').textContent=h;document.getElementById('aVal').textContent=a;
+  const bfD=document.getElementById('bfDisp'),smmD=document.getElementById('smmDisp');
+  if(useBF){bfD.textContent=bf.toFixed(1)+'%';bfD.style.color='var(--accent)';}else{bfD.textContent='—';bfD.style.color='var(--muted)';}
+  if(useSMM){smmD.textContent=smm.toFixed(1)+' kg';smmD.style.color='var(--accent)';}else{smmD.textContent='—';smmD.style.color='var(--muted)';}
   let bmr;
-  if(useSMM){
-    const lbm=smm/0.56;
-    bmr=370+21.6*lbm;
-  } else if(useBF){
-    const lbm=w*(1-bf/100);
-    bmr=370+21.6*lbm;
-  } else {
-    bmr=gender==='male'?10*w+6.25*h-5*a+5:10*w+6.25*h-5*a-161;
-  }
-
-  const tdee=Math.round(bmr*activity);
-  bmr=Math.round(bmr);
+  if(useSMM)bmr=370+21.6*(smm/0.56);
+  else if(useBF)bmr=370+21.6*(w*(1-bf/100));
+  else bmr=gender==='male'?10*w+6.25*h-5*a+5:10*w+6.25*h-5*a-161;
+  const tdee=Math.round(bmr*activity);bmr=Math.round(bmr);
   let target=tdee;
-  if(goal==='lose') target=tdee-500;
-  if(goal==='gain') target=tdee+300;
-
-  let calAdj=0,note='';
-  activeCond.forEach(c=>{calAdj+=CONDITIONS[c].calAdj||0;});
-  if(calAdj!==0) note=` <span style="font-size:10px;color:var(--amber)">(${calAdj>0?'+':''}${calAdj} kcal do bệnh lý)</span>`;
-  target+=calAdj;
-  target=Math.max(1200,target);
-  tdeeTarget=target;
-
-  document.getElementById('bmrVal').textContent=bmr;
-  document.getElementById('tdeeVal').textContent=tdee;
-  document.getElementById('targetVal').textContent=target;
-
-  const tips={
-    lose:`Ăn <strong>${target} kcal/ngày</strong>${note} — giảm ~0.5 kg mỡ/tuần.`,
-    maintain:`Ăn đúng <strong>${target} kcal/ngày</strong>${note} để duy trì cân nặng.`,
-    gain:`Ăn <strong>${target} kcal/ngày</strong>${note} kết hợp tập tạ để tăng cơ.`,
-  };
+  if(goal==='lose')target=tdee-500;if(goal==='gain')target=tdee+300;
+  let calAdj=0;activeCond.forEach(c=>{calAdj+=CONDITIONS[c].calAdj||0;});
+  let note=calAdj!==0?` <span style="font-size:10px;color:var(--amber)">(${calAdj>0?'+':''}${calAdj} bệnh lý)</span>`:'';
+  target+=calAdj;target=Math.max(1200,target);tdeeTarget=target;
+  document.getElementById('bmrVal').textContent=bmr;document.getElementById('tdeeVal').textContent=tdee;document.getElementById('targetVal').textContent=target;
+  const tips={lose:`Ăn <strong>${target} kcal/ngày</strong>${note} — giảm ~0.5 kg mỡ/tuần.`,maintain:`Ăn đúng <strong>${target} kcal/ngày</strong>${note} để duy trì.`,gain:`Ăn <strong>${target} kcal/ngày</strong>${note} kết hợp tập tạ.`};
   document.getElementById('tipBox').innerHTML=tips[goal];
-
-  /* Protein theo bệnh lý */
-  let pMult=2.0;
-  activeCond.forEach(c=>{pMult=Math.min(pMult,CONDITIONS[c].pMult);});
-  const protein=Math.round(w*pMult);
-  const pKcal=protein*4;
-  const fKcal=Math.round(target*0.27);
-  const fat=Math.round(fKcal/9);
-  const cKcal=Math.max(0,target-pKcal-fKcal);
-  const carb=Math.round(cKcal/4);
-  const maxK=Math.max(pKcal,cKcal,fKcal,1);
-  document.getElementById('tpG').textContent=protein+'g';
-  document.getElementById('tpKcal').textContent=pKcal+' kcal';
-  document.getElementById('tpBar').style.width=Math.round(pKcal/maxK*100)+'%';
-  document.getElementById('tcG').textContent=carb+'g';
-  document.getElementById('tcKcal').textContent=cKcal+' kcal';
-  document.getElementById('tcBar').style.width=Math.round(cKcal/maxK*100)+'%';
-  document.getElementById('tfG').textContent=fat+'g';
-  document.getElementById('tfKcal').textContent=fKcal+' kcal';
-  document.getElementById('tfBar').style.width=Math.round(fKcal/maxK*100)+'%';
-
-  /* Body comp */
+  let pMult=2.0;activeCond.forEach(c=>{pMult=Math.min(pMult,CONDITIONS[c].pMult);});
+  const protein=Math.round(w*pMult),pKcal=protein*4,fKcal=Math.round(target*0.27),fat=Math.round(fKcal/9),cKcal=Math.max(0,target-pKcal-fKcal),carb=Math.round(cKcal/4),maxK=Math.max(pKcal,cKcal,fKcal,1);
+  document.getElementById('tpG').textContent=protein+'g';document.getElementById('tpKcal').textContent=pKcal+' kcal';document.getElementById('tpBar').style.width=Math.round(pKcal/maxK*100)+'%';
+  document.getElementById('tcG').textContent=carb+'g';document.getElementById('tcKcal').textContent=cKcal+' kcal';document.getElementById('tcBar').style.width=Math.round(cKcal/maxK*100)+'%';
+  document.getElementById('tfG').textContent=fat+'g';document.getElementById('tfKcal').textContent=fKcal+' kcal';document.getElementById('tfBar').style.width=Math.round(fKcal/maxK*100)+'%';
   if(useBF||useSMM){
-    const fatKg=useBF?parseFloat((w*bf/100).toFixed(1)):null;
-    const leanKg=fatKg!=null?parseFloat((w-fatKg).toFixed(1)):null;
-    document.getElementById('fatKgV').textContent=fatKg!=null?fatKg:'—';
-    document.getElementById('fatPctV').textContent=useBF?bf.toFixed(1)+'%':'—';
-    document.getElementById('leanV').textContent=leanKg!=null?leanKg:'—';
-    document.getElementById('smmV').textContent=useSMM?smm.toFixed(1):'—';
-
+    const fatKg=useBF?parseFloat((w*bf/100).toFixed(1)):null,leanKg=fatKg!=null?parseFloat((w-fatKg).toFixed(1)):null;
+    document.getElementById('fatKgV').textContent=fatKg!=null?fatKg:'—';document.getElementById('fatPctV').textContent=useBF?bf.toFixed(1)+'%':'—';
+    document.getElementById('leanV').textContent=leanKg!=null?leanKg:'—';document.getElementById('smmV').textContent=useSMM?smm.toFixed(1):'—';
     let rating='',col='var(--accent2)';
-    if(useBF){
-      const ranges=gender==='male'?[[6,'Cực thấp — vận động viên thi đấu.','var(--accent2)'],[14,'Thể hình tốt — múi cơ rõ, gọn đẹp.','var(--ok)'],[18,'Bình thường — khoẻ mạnh, có thể cải thiện.','var(--ok)'],[25,'Hơi cao — nên cardio + kiểm soát ăn uống.','var(--warn)'],]:[[14,'Cực thấp — vận động viên chuyên nghiệp.','var(--accent2)'],[21,'Thể hình tốt — cơ thể săn chắc.','var(--ok)'],[25,'Bình thường — vóc dáng khoẻ mạnh.','var(--ok)'],[32,'Hơi cao — nên tập cardio và điều chỉnh ăn.','var(--warn)'],];
-      let found=false;
-      for(const [max,txt,c] of ranges){if(bf<max){rating=txt;col=c;found=true;break;}}
-      if(!found){rating='Cao — ưu tiên giảm mỡ kết hợp tập luyện.';col='var(--danger)';}
-    }
+    if(useBF){const R=gender==='male'?[[6,'Cực thấp — VĐV thi đấu.','var(--accent2)'],[14,'Thể hình tốt — cơ rõ, gọn đẹp.','var(--ok)'],[18,'Bình thường — khoẻ mạnh.','var(--ok)'],[25,'Hơi cao — nên tập cardio thêm.','var(--warn)']]:[[14,'Cực thấp — VĐV chuyên nghiệp.','var(--accent2)'],[21,'Thể hình tốt — cơ thể săn chắc.','var(--ok)'],[25,'Bình thường — khoẻ mạnh.','var(--ok)'],[32,'Hơi cao — nên điều chỉnh.','var(--warn)']];let found=false;for(const[max,txt,c]of R){if(bf<max){rating=txt;col=c;found=true;break;}}if(!found){rating='Cao — ưu tiên giảm mỡ trước.';col='var(--danger)';}}
     let smmNote='';
-    if(useSMM){
-      const mn=gender==='male'?w*0.42:w*0.36,mx=gender==='male'?w*0.50:w*0.43;
-      if(smm<mn) smmNote=`<br><span style="color:var(--warn);font-size:11px">Cơ bắp hơi thấp — nên tập sức mạnh và đủ protein.</span>`;
-      else if(smm<=mx) smmNote=`<br><span style="color:var(--ok);font-size:11px">Khối lượng cơ trong ngưỡng tốt — duy trì tốt!</span>`;
-      else smmNote=`<br><span style="color:var(--ok);font-size:11px">Khối lượng cơ rất tốt — tiếp tục với đủ protein.</span>`;
-    }
-    const method=useSMM||useBF?`<br><span style="color:var(--muted);font-size:10px">BMR tính theo Katch-McArdle (chính xác hơn khi có thành phần cơ thể).</span>`:'';
-    document.getElementById('bodyRating').innerHTML=`<span style="color:${col}">${rating||'Nhập % mỡ để xem đánh giá.'}</span>${smmNote}${method}`;
+    if(useSMM){const mn=gender==='male'?w*0.42:w*0.36,mx=gender==='male'?w*0.50:w*0.43;smmNote=smm<mn?`<br><span style="color:var(--warn);font-size:11px">Cơ hơi thấp — tập sức mạnh + đủ protein.</span>`:smm<=mx?`<br><span style="color:var(--ok);font-size:11px">Khối lượng cơ trong ngưỡng tốt!</span>`:`<br><span style="color:var(--ok);font-size:11px">Cơ rất tốt — tiếp tục duy trì!</span>`;}
+    document.getElementById('bodyRating').innerHTML=`<span style="color:${col}">${rating||'Tick % mỡ để xem đánh giá.'}</span>${smmNote}${(useSMM||useBF)?'<br><span style="color:var(--muted);font-size:10px">BMR tính bằng Katch-McArdle.</span>':''}`;
   }
 }
 
-function toggleCond(btn){
-  const c=btn.dataset.cond;
-  if(activeCond.has(c)){activeCond.delete(c);btn.classList.remove('on');}
-  else{activeCond.add(c);btn.classList.add('on');}
-  renderCondBox();
-  calc();
-  filterFoods();
-  updateFoodCondWarn();
-}
-
-function renderCondBox(){
-  const box=document.getElementById('condBox');
-  if(activeCond.size===0){box.innerHTML='';return;}
-  let html='';
-  activeCond.forEach(c=>{
-    const d=CONDITIONS[c];
-    html+=`<div class="tip-box tip-warn" style="margin-bottom:.7rem">
-      <div style="font-size:12px;font-weight:600;color:var(--amber);margin-bottom:5px">${d.label}</div>
-      <div style="font-size:11px;margin-bottom:8px">${d.note}</div>
-      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Nên ăn</div>
-      ${d.prefer.map(f=>`<div class="cond-ok">✓ ${f}</div>`).join('')}
-      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:8px 0 4px">Nên hạn chế / tránh</div>
-      ${d.avoid.map(f=>`<div class="cond-avoid">✗ ${f}</div>`).join('')}
-      <div style="font-size:11px;color:var(--amber);border-top:1px solid rgba(255,184,79,.2);padding-top:7px;margin-top:6px">${d.macroNote}</div>
-    </div>`;
-  });
-  box.innerHTML=html;
-}
-
-function getAvoidSet(){
-  const s=new Set();
-  activeCond.forEach(c=>CONDITIONS[c].avoid.forEach(f=>s.add(f)));
-  return s;
-}
-
-function updateFoodCondWarn(){
-  const wb=document.getElementById('condWarnBox');
-  if(activeCond.size===0){wb.style.display='none';return;}
-  const names=[...activeCond].map(c=>CONDITIONS[c].label).join(' · ');
-  wb.style.display='block';
-  wb.innerHTML=`<strong>Bệnh lý:</strong> ${names}<br><span style="font-size:10px">Thực phẩm có ⚠ nên hạn chế. Tham khảo bác sĩ trước khi thay đổi chế độ ăn.</span>`;
-}
-
-function syncToTracker(){
-  document.getElementById('foodTarget').value=tdeeTarget;
-  renderLog();
-  updateFoodCondWarn();
-  switchTab('food');
-}
-
-function initCats(){
-  const cr=document.getElementById('catRow');
-  CATS.forEach(c=>{
-    const b=document.createElement('button');
-    b.className='cat-btn'+(c==='Tất cả'?' on':'');
-    b.textContent=c;
-    b.onclick=()=>{activeCat=c;document.querySelectorAll('.cat-btn').forEach(x=>x.classList.remove('on'));b.classList.add('on');filterFoods();};
-    cr.appendChild(b);
-  });
-  filterFoods();
-}
-
-function filterFoods(){
-  const q=document.getElementById('searchBox').value.toLowerCase();
-  const avoid=getAvoidSet();
-  const list=FOODS.filter(f=>(activeCat==='Tất cả'||f.cat===activeCat)&&f.name.toLowerCase().includes(q));
-  const grid=document.getElementById('foodGrid');
-  grid.innerHTML='';
-  list.forEach(f=>{
-    const sel=foodLog.find(l=>l.name===f.name);
-    const warned=avoid.has(f.name);
-    const d=document.createElement('div');
-    d.className='fcard'+(sel?' sel':'')+(warned?' warn-food':'');
-    d.innerHTML=`<div class="fname">${f.name}</div><div class="finfo">${f.kcal} kcal · P:${f.p}g</div><div class="fper">${f.per}</div>`;
-    d.onclick=()=>{if(!foodLog.find(l=>l.name===f.name)){foodLog.push({...f,id:nextId++,grams:100});renderLog();filterFoods();}};
-    grid.appendChild(d);
-  });
-}
-
+function toggleCond(btn){const c=btn.dataset.cond;activeCond.has(c)?activeCond.delete(c):activeCond.add(c);btn.classList.toggle('on',activeCond.has(c));renderCondBox();calc();filterFoods();updateFoodCondWarn();}
+function renderCondBox(){const box=document.getElementById('condBox');if(!activeCond.size){box.innerHTML='';return;}let html='';activeCond.forEach(c=>{const d=CONDITIONS[c];html+=`<div class="tip-box tip-warn" style="margin-bottom:.7rem"><div style="font-size:12px;font-weight:600;color:var(--amber);margin-bottom:5px">${d.label}</div><div style="font-size:11px;margin-bottom:8px">${d.note}</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:4px">Nên ăn</div>${d.prefer.map(f=>`<div class="cond-ok">✓ ${f}</div>`).join('')}<div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin:8px 0 4px">Nên tránh</div>${d.avoid.map(f=>`<div class="cond-avoid">✗ ${f}</div>`).join('')}<div style="font-size:11px;color:var(--amber);border-top:1px solid rgba(255,184,79,.2);padding-top:6px;margin-top:5px">${d.macroNote}</div></div>`;});box.innerHTML=html;}
+function getAvoidSet(){const s=new Set();activeCond.forEach(c=>CONDITIONS[c].avoid.forEach(f=>s.add(f)));return s;}
+function updateFoodCondWarn(){const wb=document.getElementById('condWarnBox');if(!activeCond.size){wb.style.display='none';return;}wb.style.display='block';wb.innerHTML=`<strong>Bệnh lý:</strong> ${[...activeCond].map(c=>CONDITIONS[c].label).join(' · ')}<br><span style="font-size:10px">Thực phẩm có ⚠ nên hạn chế.</span>`;}
+function syncToTracker(){document.getElementById('foodTarget').value=tdeeTarget;renderLog();updateFoodCondWarn();switchTab('food');}
+function initCats(){const cr=document.getElementById('catRow');CATS.forEach(c=>{const b=document.createElement('button');b.className='cat-btn'+(c==='Tất cả'?' on':'');b.textContent=c;b.onclick=()=>{activeCat=c;document.querySelectorAll('.cat-btn').forEach(x=>x.classList.remove('on'));b.classList.add('on');filterFoods();};cr.appendChild(b);});filterFoods();}
+function filterFoods(){const q=document.getElementById('searchBox').value.toLowerCase(),avoid=getAvoidSet(),list=FOODS.filter(f=>(activeCat==='Tất cả'||f.cat===activeCat)&&f.name.toLowerCase().includes(q)),grid=document.getElementById('foodGrid');grid.innerHTML='';list.forEach(f=>{const sel=foodLog.find(l=>l.name===f.name),warned=avoid.has(f.name),d=document.createElement('div');d.className='fcard'+(sel?' sel':'')+(warned?' warn-food':'');d.innerHTML=`<div class="fname">${f.name}</div><div class="finfo">${f.kcal} kcal · P:${f.p}g</div><div class="fper">${f.per}</div>`;d.onclick=()=>{if(!foodLog.find(l=>l.name===f.name)){foodLog.push({...f,id:nextId++,grams:100});renderLog();filterFoods();}};grid.appendChild(d);});}
 function removeFood(id){foodLog=foodLog.filter(l=>l.id!==id);renderLog();filterFoods();}
 function changeGrams(id,val){const it=foodLog.find(l=>l.id===id);if(it)it.grams=Math.max(1,parseInt(val)||1);renderLog();}
-
 function renderLog(){
-  const ll=document.getElementById('logList');
-  const avoid=getAvoidSet();
-  if(foodLog.length===0){ll.innerHTML='<div class="log-empty">Chọn thực phẩm ở trên để thêm vào</div>';}
-  else{
-    ll.innerHTML=foodLog.map(item=>{
-      const r=item.grams/100,k=Math.round(item.kcal*r);
-      const w=avoid.has(item.name)?`<span style="color:var(--danger);font-size:9px"> ⚠ nên tránh</span>`:'';
-      return `<div class="log-row">
-        <div><div class="lname">${item.name}${w}</div><div class="lcat">${item.cat}</div></div>
-        <input class="lg-inp" type="number" value="${item.grams}" min="1" max="2000" step="10" onchange="changeGrams(${item.id},this.value)">
-        <span class="lg-unit">g</span>
-        <span class="lkcal">${k} kcal</span>
-        <button class="ldel" onclick="removeFood(${item.id})">×</button>
-      </div>`;
-    }).join('');
-  }
-  let tK=0,tP=0,tC=0,tF=0;
-  foodLog.forEach(i=>{const r=i.grams/100;tK+=i.kcal*r;tP+=i.p*r;tC+=i.c*r;tF+=i.f*r;});
+  const ll=document.getElementById('logList'),avoid=getAvoidSet();
+  if(!foodLog.length){ll.innerHTML='<div class="log-empty">Chọn thực phẩm ở trên để thêm vào</div>';}
+  else{ll.innerHTML=foodLog.map(item=>{const r=item.grams/100,k=Math.round(item.kcal*r),w=avoid.has(item.name)?` <span style="color:var(--danger);font-size:9px">⚠</span>`:'';return `<div class="log-row"><div><div class="lname">${item.name}${w}</div><div class="lcat">${item.cat}</div></div><input class="lg-inp" type="number" value="${item.grams}" min="1" max="2000" step="10" onchange="changeGrams(${item.id},this.value)"><span class="lg-unit">g</span><span class="lkcal">${k} kcal</span><button class="ldel" onclick="removeFood(${item.id})">×</button></div>`;}).join('');}
+  let tK=0,tP=0,tC=0,tF=0;foodLog.forEach(i=>{const r=i.grams/100;tK+=i.kcal*r;tP+=i.p*r;tC+=i.c*r;tF+=i.f*r;});
   tK=Math.round(tK);tP=Math.round(tP);tC=Math.round(tC);tF=Math.round(tF);
-  document.getElementById('totK').textContent=tK;
-  document.getElementById('totP').textContent=tP;
-  document.getElementById('totC').textContent=tC;
-  document.getElementById('totF').textContent=tF;
-  const target=Math.max(1,parseInt(document.getElementById('foodTarget').value)||1600);
-  const pct=Math.min(110,Math.round(tK/target*100));
-  const bar=document.getElementById('progBar');
-  bar.style.width=Math.min(100,pct)+'%';
-  bar.style.background=pct>100?'var(--danger)':pct>85?'var(--warn)':'var(--ok)';
+  document.getElementById('totK').textContent=tK;document.getElementById('totP').textContent=tP;document.getElementById('totC').textContent=tC;document.getElementById('totF').textContent=tF;
+  const target=Math.max(1,parseInt(document.getElementById('foodTarget').value)||1600),pct=Math.min(110,Math.round(tK/target*100)),bar=document.getElementById('progBar');
+  bar.style.width=Math.min(100,pct)+'%';bar.style.background=pct>100?'var(--danger)':pct>85?'var(--warn)':'var(--ok)';
   document.getElementById('progPct').textContent=pct+'%';
   const rem=target-tK,msg=document.getElementById('statusMsg');
-  if(tK===0){msg.textContent='';return;}
-  if(rem>0){msg.textContent=`Còn ${rem} kcal`;msg.style.color='var(--muted)';}
-  else if(rem===0){msg.textContent='Đạt đúng mục tiêu!';msg.style.color='var(--ok)';}
-  else{msg.textContent=`Vượt ${Math.abs(rem)} kcal`;msg.style.color='var(--danger)';}
+  if(!tK){msg.textContent='';return;}
+  msg.textContent=rem>0?`Còn ${rem} kcal`:rem===0?'Đạt đúng mục tiêu!':`Vượt ${Math.abs(rem)} kcal`;
+  msg.style.color=rem<0?'var(--danger)':rem<100?'var(--warn)':'var(--muted)';
 }
 
-calc();
-initCats();
+/* ════════════════════════════════════════
+   MEAL PLAN
+════════════════════════════════════════ */
+const MEALS=[
+  {id:'sang1',name:'Bữa sáng',    emoji:'🌅',time:'7:00', color:'var(--accent2)'},
+  {id:'phu1', name:'Bữa phụ sáng',emoji:'🍎',time:'10:00',color:'var(--amber)'},
+  {id:'trua', name:'Bữa trưa',    emoji:'☀️',time:'12:00',color:'var(--accent)'},
+  {id:'phu2', name:'Bữa phụ chiều',emoji:'🥜',time:'15:00',color:'var(--amber)'},
+  {id:'toi',  name:'Bữa tối',     emoji:'🌙',time:'18:30',color:'var(--protein)'},
+  {id:'phu3', name:'Bữa phụ tối', emoji:'🥛',time:'21:00',color:'var(--muted)'},
+];
+const CAT_PRI={
+  'Tinh bột':['sang1','trua','toi','phu1','phu2','phu3'],
+  'Đạm':['trua','toi','sang1','phu2','phu3','phu1'],
+  'Rau củ':['trua','toi','sang1','phu1','phu2','phu3'],
+  'Trái cây':['phu1','phu2','sang1','phu3','trua','toi'],
+  'Hạt':['phu1','phu2','phu3','sang1','trua','toi'],
+  'Chất béo':['sang1','trua','toi','phu1','phu2','phu3'],
+};
+let mealAssign={};
+let splits=[];   // {id,srcId,mealId,grams}
+let splitIdx=0;
+let openSplit=new Set();
+
+function autoAssign(){
+  mealAssign={};splits=[];openSplit=new Set();
+  if(!foodLog.length)return;
+  const cnt={sang1:0,phu1:0,trua:0,phu2:0,toi:0,phu3:0};
+  foodLog.forEach(function(item){
+    var pri=CAT_PRI[item.cat]||['trua','toi','sang1','phu1','phu2','phu3'];
+    var best=pri[0],bs=99;
+    pri.forEach(function(mid,i){var sc=i*2+cnt[mid];if(sc<bs){bs=sc;best=mid;}});
+    mealAssign[item.id]=best;
+    cnt[best]++;
+  });
+}
+
+function moveToBua(itemId,mealId){mealAssign[itemId]=mealId;renderMealPlan();}
+
+function splitUsed(srcId){return splits.filter(function(s){return s.srcId===srcId;}).reduce(function(a,s){return a+s.grams;},0);}
+function splitRemain(srcId){var item=foodLog.find(function(i){return i.id===srcId;});if(!item)return 0;return Math.max(0,item.grams-splitUsed(srcId));}
+
+function toggleSplit(srcId){
+  if(openSplit.has(srcId))openSplit.delete(srcId);
+  else openSplit.add(srcId);
+  renderMealPlan();
+}
+
+function addSplit(srcId){
+  var gEl=document.getElementById('sg_'+srcId);
+  var mEl=document.getElementById('sm_'+srcId);
+  if(!gEl||!mEl)return;
+  var g=parseInt(gEl.value)||0;
+  var rem=splitRemain(srcId);
+  if(g<=0||g>rem){gEl.style.borderColor='var(--danger)';setTimeout(function(){gEl.style.borderColor='';},900);return;}
+  splits.push({id:splitIdx++,srcId:srcId,mealId:mEl.value,grams:g});
+  gEl.value='';
+  renderMealPlan();
+}
+
+function removeSplit(sid){splits=splits.filter(function(s){return s.id!==sid;});renderMealPlan();}
+
+function renderMealPlan(){
+  var hasFood=foodLog.length>0;
+  document.getElementById('mealEmptyMsg').style.display=hasFood?'none':'block';
+  document.getElementById('mealPlanContent').style.display=hasFood?'block':'none';
+  if(!hasFood)return;
+  if(foodLog.some(function(item){return !mealAssign[item.id];}))autoAssign();
+
+  // Tổng ngày
+  var tK=0,tP=0,tC=0,tF=0;
+  foodLog.forEach(function(item){var r=item.grams/100;tK+=item.kcal*r;tP+=item.p*r;tC+=item.c*r;tF+=item.f*r;});
+  document.getElementById('mealDaySummary').innerHTML=
+    '<div class="rcard hi"><p class="rlabel">Tổng calo</p><p class="rval">'+Math.round(tK)+'</p><p class="runit">kcal</p></div>'+
+    '<div class="rcard"><p class="rlabel">Protein</p><p class="rval">'+Math.round(tP)+'</p><p class="runit">g</p></div>'+
+    '<div class="rcard"><p class="rlabel">Tinh bột</p><p class="rval">'+Math.round(tC)+'</p><p class="runit">g</p></div>'+
+    '<div class="rcard"><p class="rlabel">Chất béo</p><p class="rval">'+Math.round(tF)+'</p><p class="runit">g</p></div>';
+
+  // Build items per meal
+  var buaMap={};
+  MEALS.forEach(function(m){buaMap[m.id]=[];});
+
+  foodLog.forEach(function(item){
+    var rem=splitRemain(item.id);
+    if(rem>0){
+      var r=rem/100;
+      var mid=mealAssign[item.id];
+      buaMap[mid].push({
+        type:'main',name:item.name,grams:rem,
+        kcal:Math.round(item.kcal*r),p:Math.round(item.p*r),
+        c:Math.round(item.c*r),f:Math.round(item.f*r),
+        srcId:item.id,totalGrams:item.grams,
+        hasSplit:splits.some(function(s){return s.srcId===item.id;}),
+      });
+    }
+  });
+
+  splits.forEach(function(s){
+    var item=foodLog.find(function(i){return i.id===s.srcId;});
+    if(!item)return;
+    var r=s.grams/100;
+    buaMap[s.mealId].push({
+      type:'split',name:item.name,grams:s.grams,
+      kcal:Math.round(item.kcal*r),p:Math.round(item.p*r),
+      c:Math.round(item.c*r),f:Math.round(item.f*r),
+      srcId:s.srcId,splitId:s.id,
+    });
+  });
+
+  var html='';
+  MEALS.forEach(function(m){
+    var items=buaMap[m.id];
+    var bK=0,bP=0,bC=0,bF=0;
+    items.forEach(function(it){bK+=it.kcal;bP+=it.p;bC+=it.c;bF+=it.f;});
+    var isEmpty=items.length===0;
+
+    var rowsHtml='';
+    if(isEmpty){
+      rowsHtml='<div style="font-size:12px;color:var(--faint);padding:.4rem 0;font-style:italic">Chưa có món</div>';
+    } else {
+      items.forEach(function(it){
+        if(it.type==='split'){
+          rowsHtml+='<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)">'+
+            '<div style="width:3px;height:32px;border-radius:99px;background:var(--amber);flex-shrink:0"></div>'+
+            '<div style="flex:1;min-width:0">'+
+              '<div style="font-size:12px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+it.name+' <span style="color:var(--amber);font-size:10px">(tách)</span></div>'+
+              '<div style="font-size:10px;color:var(--muted)">'+it.grams+'g · '+it.kcal+' kcal · P:'+it.p+'g</div>'+
+            '</div>'+
+            '<button onclick="removeSplit('+it.splitId+')" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:18px;padding:0 4px;line-height:1">×</button>'+
+          '</div>';
+        } else {
+          var isOpen=openSplit.has(it.srcId);
+          var rem=splitRemain(it.srcId);
+          var mealSel='';
+          MEALS.forEach(function(bm){
+            mealSel+='<option value="'+bm.id+'"'+(mealAssign[it.srcId]===bm.id?' selected':'')+'>'+bm.emoji+' '+bm.name+'</option>';
+          });
+          var splitOpts='';
+          MEALS.forEach(function(bm){
+            if(bm.id!==m.id) splitOpts+='<option value="'+bm.id+'">'+bm.emoji+' '+bm.name+'</option>';
+          });
+          var splitDone='';
+          splits.filter(function(s){return s.srcId===it.srcId;}).forEach(function(s){
+            var bm=MEALS.find(function(x){return x.id===s.mealId;});
+            splitDone+=s.grams+'g → '+(bm?bm.emoji+bm.name:'?')+' · ';
+          });
+
+          var panelHtml='';
+          if(isOpen){
+            panelHtml='<div style="background:var(--faint);border-radius:8px;padding:.7rem;margin-top:.5rem">'+
+              '<div style="font-size:10px;color:var(--muted);margin-bottom:.5rem">Tách '+it.name+' · Còn '+rem+'g chưa chia</div>'+
+              '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">'+
+                '<input id="sg_'+it.srcId+'" type="number" min="1" max="'+rem+'" placeholder="gram" style="width:72px;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:6px 8px;color:var(--text);font-family:DM Mono,monospace;font-size:12px;text-align:center;outline:none">'+
+                '<select id="sm_'+it.srcId+'" style="flex:1;min-width:110px;background:var(--surface);border:1px solid var(--border);border-radius:7px;color:var(--muted);font-size:11px;padding:6px;outline:none">'+splitOpts+'</select>'+
+                '<button onclick="addSplit('+it.srcId+')" style="padding:6px 14px;background:var(--accent);color:#0d0f14;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer">Tách</button>'+
+              '</div>'+
+              (splitDone?'<div style="font-size:10px;color:var(--muted);margin-top:.4rem">Đã tách: '+splitDone+'</div>':'')+
+            '</div>';
+          }
+
+          rowsHtml+='<div style="border-bottom:1px solid var(--border)">'+
+            '<div style="display:flex;align-items:center;gap:8px;padding:7px 0">'+
+              '<div style="flex:1;min-width:0">'+
+                '<div style="font-size:12px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+
+                  it.name+(it.hasSplit?' <span style="font-size:9px;color:var(--amber)">'+it.totalGrams+'g tổng</span>':'')+
+                '</div>'+
+                '<div style="font-size:10px;color:var(--muted)">'+it.grams+'g · '+it.kcal+' kcal · P:'+it.p+'g C:'+it.c+'g</div>'+
+              '</div>'+
+              '<button onclick="toggleSplit('+it.srcId+')" style="flex-shrink:0;background:'+(isOpen?'rgba(79,255,176,.12)':'var(--surface)')+';border:1px solid '+(isOpen?'var(--accent)':'var(--border)')+';border-radius:7px;color:'+(isOpen?'var(--accent)':'var(--muted)')+';font-size:11px;padding:4px 8px;cursor:pointer;white-space:nowrap">✂ Tách</button>'+
+              '<select onchange="moveToBua('+it.srcId+',this.value)" style="flex-shrink:0;background:var(--surface);border:1px solid var(--border);border-radius:7px;color:var(--muted);font-size:10px;padding:4px 6px;cursor:pointer;outline:none;max-width:115px">'+mealSel+'</select>'+
+            '</div>'+
+            panelHtml+
+          '</div>';
+        }
+      });
+    }
+
+    html+='<div class="panel" style="margin-bottom:.7rem;padding:1rem 1.1rem">'+
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem">'+
+        '<div style="display:flex;align-items:center;gap:8px">'+
+          '<span style="font-size:1.3rem">'+m.emoji+'</span>'+
+          '<div>'+
+            '<span style="font-size:13px;font-weight:700;color:var(--text)">'+m.name+'</span>'+
+            '<span style="font-size:10px;color:var(--muted);margin-left:6px">'+m.time+'</span>'+
+          '</div>'+
+        '</div>'+
+        '<div style="text-align:right">'+
+          '<div style="font-family:DM Mono,monospace;font-size:14px;font-weight:500;color:'+m.color+'">'+bK+' kcal</div>'+
+          (!isEmpty?'<div style="font-size:10px;color:var(--muted)">P:'+bP+'g C:'+bC+'g F:'+bF+'g</div>':'')+
+        '</div>'+
+      '</div>'+
+      rowsHtml+
+    '</div>';
+  });
+
+  document.getElementById('mealBuaList').innerHTML=html;
+}
+
+
 </script>
 </body>
 </html>
