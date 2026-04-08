@@ -303,6 +303,44 @@ footer{text-align:center;margin-top:2rem;font-size:10px;color:var(--muted);font-
         <div class="prog-label"><span>Tiến độ calo</span><span id="progPct">0%</span></div>
         <div class="prog-bg"><div class="prog-f" id="progBar" style="width:0%"></div></div>
         <div class="status-msg" id="statusMsg"></div>
+
+        <div id="macroCompare" style="display:none;margin-top:1rem;border-top:1px solid var(--border);padding-top:1rem">
+          <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-bottom:.8rem">So sánh với mục tiêu TDEE</div>
+
+          <div style="margin-bottom:.7rem">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">
+              <span style="font-size:12px;color:var(--protein);font-weight:600">Protein</span>
+              <span style="font-family:'DM Mono',monospace;font-size:11px" id="macroLabelP">0 / — g</span>
+            </div>
+            <div style="height:8px;background:var(--border);border-radius:99px;overflow:hidden">
+              <div id="macroBarP" style="height:100%;border-radius:99px;background:var(--protein);width:0%;transition:width .35s"></div>
+            </div>
+          </div>
+
+          <div style="margin-bottom:.7rem">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">
+              <span style="font-size:12px;color:var(--carb);font-weight:600">Tinh bột</span>
+              <span style="font-family:'DM Mono',monospace;font-size:11px" id="macroLabelC">0 / — g</span>
+            </div>
+            <div style="height:8px;background:var(--border);border-radius:99px;overflow:hidden">
+              <div id="macroBarC" style="height:100%;border-radius:99px;background:var(--carb);width:0%;transition:width .35s"></div>
+            </div>
+          </div>
+
+          <div style="margin-bottom:.3rem">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">
+              <span style="font-size:12px;color:var(--fat);font-weight:600">Chất béo</span>
+              <span style="font-family:'DM Mono',monospace;font-size:11px" id="macroLabelF">0 / — g</span>
+            </div>
+            <div style="height:8px;background:var(--border);border-radius:99px;overflow:hidden">
+              <div id="macroBarF" style="height:100%;border-radius:99px;background:var(--fat);width:0%;transition:width .35s"></div>
+            </div>
+          </div>
+
+          <div style="font-size:10px;color:var(--muted);margin-top:.7rem;text-align:center" id="macroHint">
+            Tính TDEE ở Tab 1 → bấm "Dùng số này cho bữa ăn" để hiển thị mục tiêu
+          </div>
+        </div>
       </div>
     </div>
 
@@ -487,7 +525,17 @@ function toggleCond(btn){const c=btn.dataset.cond;activeCond.has(c)?activeCond.d
 function renderCondBox(){const box=document.getElementById('condBox');if(!activeCond.size){box.innerHTML='';return;}let html='';activeCond.forEach(c=>{const d=CONDITIONS[c];html+=`<div class="tip-box tip-warn" style="margin-bottom:.7rem"><div style="font-size:12px;font-weight:600;color:var(--amber);margin-bottom:5px">${d.label}</div><div style="font-size:11px;margin-bottom:8px">${d.note}</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:4px">Nên ăn</div>${d.prefer.map(f=>`<div class="cond-ok">✓ ${f}</div>`).join('')}<div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin:8px 0 4px">Nên tránh</div>${d.avoid.map(f=>`<div class="cond-avoid">✗ ${f}</div>`).join('')}<div style="font-size:11px;color:var(--amber);border-top:1px solid rgba(255,184,79,.2);padding-top:6px;margin-top:5px">${d.macroNote}</div></div>`;});box.innerHTML=html;}
 function getAvoidSet(){const s=new Set();activeCond.forEach(c=>CONDITIONS[c].avoid.forEach(f=>s.add(f)));return s;}
 function updateFoodCondWarn(){const wb=document.getElementById('condWarnBox');if(!activeCond.size){wb.style.display='none';return;}wb.style.display='block';wb.innerHTML=`<strong>Bệnh lý:</strong> ${[...activeCond].map(c=>CONDITIONS[c].label).join(' · ')}<br><span style="font-size:10px">Thực phẩm có ⚠ nên hạn chế.</span>`;}
-function syncToTracker(){document.getElementById('foodTarget').value=tdeeTarget;renderLog();updateFoodCondWarn();switchTab('food');}
+function syncToTracker(){
+  document.getElementById('foodTarget').value=tdeeTarget;
+  // Lưu macro targets từ TDEE
+  const pG=document.getElementById('tpG').textContent.replace('g','');
+  const cG=document.getElementById('tcG').textContent.replace('g','');
+  const fG=document.getElementById('tfG').textContent.replace('g','');
+  macroTargets={p:parseInt(pG)||0,c:parseInt(cG)||0,f:parseInt(fG)||0};
+  renderLog();
+  updateFoodCondWarn();
+  switchTab('food');
+}
 function initCats(){const cr=document.getElementById('catRow');CATS.forEach(c=>{const b=document.createElement('button');b.className='cat-btn'+(c==='Tất cả'?' on':'');b.textContent=c;b.onclick=()=>{activeCat=c;document.querySelectorAll('.cat-btn').forEach(x=>x.classList.remove('on'));b.classList.add('on');filterFoods();};cr.appendChild(b);});filterFoods();}
 function filterFoods(){const q=document.getElementById('searchBox').value.toLowerCase(),avoid=getAvoidSet(),list=FOODS.filter(f=>(activeCat==='Tất cả'||f.cat===activeCat)&&f.name.toLowerCase().includes(q)),grid=document.getElementById('foodGrid');grid.innerHTML='';list.forEach(f=>{const sel=foodLog.find(l=>l.name===f.name),warned=avoid.has(f.name),d=document.createElement('div');d.className='fcard'+(sel?' sel':'')+(warned?' warn-food':'');d.innerHTML=`<div class="fname">${f.name}</div><div class="finfo">${f.kcal} kcal · P:${f.p}g</div><div class="fper">${f.per}</div>`;d.onclick=()=>{if(!foodLog.find(l=>l.name===f.name)){foodLog.push({...f,id:nextId++,grams:100});renderLog();filterFoods();}};grid.appendChild(d);});}
 function removeFood(id){foodLog=foodLog.filter(l=>l.id!==id);renderLog();filterFoods();}
@@ -503,9 +551,29 @@ function renderLog(){
   bar.style.width=Math.min(100,pct)+'%';bar.style.background=pct>100?'var(--danger)':pct>85?'var(--warn)':'var(--ok)';
   document.getElementById('progPct').textContent=pct+'%';
   const rem=target-tK,msg=document.getElementById('statusMsg');
-  if(!tK){msg.textContent='';return;}
-  msg.textContent=rem>0?`Còn ${rem} kcal`:rem===0?'Đạt đúng mục tiêu!':`Vượt ${Math.abs(rem)} kcal`;
-  msg.style.color=rem<0?'var(--danger)':rem<100?'var(--warn)':'var(--muted)';
+  if(!tK){msg.textContent='';}
+  else{msg.textContent=rem>0?`Còn ${rem} kcal`:rem===0?'Đạt đúng mục tiêu!':`Vượt ${Math.abs(rem)} kcal`;msg.style.color=rem<0?'var(--danger)':rem<100?'var(--warn)':'var(--muted)';}
+
+  // === MACRO COMPARE BARS ===
+  var mc=document.getElementById('macroCompare');
+  var hasTarget=macroTargets.p>0||macroTargets.c>0||macroTargets.f>0;
+  if(mc) mc.style.display=(tK>0||hasTarget)?'block':'none';
+
+  function setBar(barId,lblId,actual,tgt,color){
+    var b=document.getElementById(barId),l=document.getElementById(lblId);
+    if(!b||!l)return;
+    var p=tgt>0?Math.min(100,Math.round(actual/tgt*100)):0;
+    var over=tgt>0&&actual>tgt*1.05;
+    b.style.width=p+'%';
+    b.style.background=over?'var(--danger)':color;
+    l.textContent=actual+'g'+(tgt>0?' / '+tgt+'g':'');
+    l.style.color=over?'var(--danger)':p>=90?'var(--ok)':'var(--muted)';
+  }
+  setBar('macroBarP','macroLabelP',tP,macroTargets.p,'var(--protein)');
+  setBar('macroBarC','macroLabelC',tC,macroTargets.c,'var(--carb)');
+  setBar('macroBarF','macroLabelF',tF,macroTargets.f,'var(--fat)');
+  var hint=document.getElementById('macroHint');
+  if(hint) hint.style.display=hasTarget?'none':'block';
 }
 
 /* ════════════════════════════════════════
@@ -531,6 +599,9 @@ let mealAssign={};
 let splits=[];   // {id,srcId,mealId,grams}
 let splitIdx=0;
 let openSplit=new Set();
+
+// Macro targets từ TDEE (cập nhật khi bấm "Dùng số này cho bữa ăn")
+let macroTargets={p:0,c:0,f:0};
 
 function autoAssign(){
   mealAssign={};splits=[];openSplit=new Set();
