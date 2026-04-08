@@ -390,14 +390,14 @@ let useBF=false,useSMM=false;
 let activeCond=new Set(),activeCat='Tất cả',foodLog=[],nextId=0,tdeeTarget=1600;
 
 const CONDITIONS={
-  diabetes:{label:'Tiểu đường / Kháng insulin',note:'Ưu tiên GI thấp, kiểm soát tinh bột, chia nhiều bữa nhỏ.',avoid:['Cơm trắng','Bún tươi','Bánh mì trắng','Xoài','Nho','Dứa','Chuối'],prefer:['Cơm gạo lứt','Khoai lang','Yến mạch','Ổi','Táo','Bông cải xanh','Ức gà','Hạt chia'],calAdj:0,pMult:1.8,macroNote:'Tinh bột ≤40% tổng calo.'},
-  hypertension:{label:'Huyết áp cao',note:'Giảm natri, tăng kali. Tránh chế biến sẵn nhiều muối.',avoid:['Ba chỉ heo','Sườn heo','Thịt heo xay','Bơ lạt','Dầu dừa'],prefer:['Cá hồi','Cá ngừ','Bông cải xanh','Chuối','Hạt chia','Đậu phụ','Rau bina'],calAdj:0,pMult:1.6,macroNote:'Natri <2g/ngày. Tăng kali và omega-3.'},
-  gout:{label:'Gout',note:'Tránh purine cao. Uống ≥2.5L nước/ngày.',avoid:['Thịt bò nạc','Sườn bò','Ba chỉ heo','Sườn heo','Tôm','Cá ngừ','Cá hồi','Hạt mắc ca'],prefer:['Ức gà','Trứng gà','Đậu phụ','Khoai lang','Dưa leo','Táo','Ổi'],calAdj:0,pMult:1.2,macroNote:'Protein ≤1.2g/kg. Ưu tiên protein thực vật.'},
-  cholesterol:{label:'Mỡ máu cao',note:'Giảm chất béo bão hòa, tăng omega-3 và chất xơ.',avoid:['Ba chỉ heo','Sườn heo','Sườn bò','Bơ lạt','Dầu dừa','Hạt mắc ca'],prefer:['Cá hồi','Ức gà','Hạt chia','Hạt óc chó','Dầu olive','Táo','Yến mạch'],calAdj:0,pMult:1.6,macroNote:'Chất béo bão hòa <7% tổng calo.'},
-  kidney:{label:'Thận yếu',note:'Kiểm soát protein, kali, phốt pho theo bác sĩ.',avoid:['Protein shake','Hạt chia','Hạt óc chó','Hạnh nhân','Chuối','Cam','Cà chua'],prefer:['Cơm trắng','Bún tươi','Dưa leo','Xà lách','Bắp cải','Táo','Dưa hấu'],calAdj:0,pMult:0.8,macroNote:'Protein 0.6–0.8g/kg theo bác sĩ.'},
-  liver:{label:'Gan nhiễm mỡ',note:'Giảm mỡ bão hòa và đường đơn.',avoid:['Ba chỉ heo','Sườn heo','Bơ lạt','Dầu dừa','Xoài','Nho'],prefer:['Ức gà','Cá hồi','Đậu phụ','Bông cải xanh','Dầu olive','Táo','Yến mạch'],calAdj:-100,pMult:1.5,macroNote:'Giảm thêm 100 kcal. Chất béo tổng <30%.'},
-  gastric:{label:'Dạ dày / Trào ngược',note:'Chia 5–6 bữa nhỏ. Tránh cay, chua, nhiều dầu.',avoid:['Ớt chuông','Cà chua','Cam','Dứa','Ba chỉ heo','Đậu phộng'],prefer:['Cơm gạo lứt','Khoai lang','Ức gà luộc','Cá basa hấp','Dưa leo','Chuối','Sữa chua HL'],calAdj:0,pMult:1.6,macroNote:'Ăn 5–6 bữa nhỏ/ngày.'},
-  thyroid:{label:'Tuyến giáp (suy giáp)',note:'Trao đổi chất chậm — đã giảm calo.',avoid:['Bắp cải sống','Bông cải xanh sống'],prefer:['Cá hồi','Cá ngừ','Tôm','Trứng gà','Hạt chia','Khoai lang','Rau bina'],calAdj:-150,pMult:1.7,macroNote:'Đã giảm 150 kcal cho suy giáp.'},
+  diabetes:{label:'Tiểu đường / Kháng insulin',note:'Ưu tiên GI thấp, kiểm soát tinh bột, chia nhiều bữa nhỏ.',avoid:['Cơm trắng','Bún tươi','Bánh mì trắng','Xoài','Nho','Dứa','Chuối'],prefer:['Cơm gạo lứt','Khoai lang','Yến mạch','Ổi','Táo','Bông cải xanh','Ức gà','Hạt chia'],calAdj:0,pMult:1.8,fatPct:null,carbPct:35,macroNote:'Tinh bột ≤35% tổng calo. Protein cao giúp ổn định đường huyết.'},
+  hypertension:{label:'Huyết áp cao',note:'Giảm natri, tăng kali. Tránh chế biến sẵn nhiều muối.',avoid:['Ba chỉ heo','Sườn heo','Thịt heo xay','Bơ lạt','Dầu dừa'],prefer:['Cá hồi','Cá ngừ','Bông cải xanh','Chuối','Hạt chia','Đậu phụ','Rau bina'],calAdj:0,pMult:null,fatPct:null,carbPct:null,macroNote:'Natri <2g/ngày. Tăng kali và omega-3. Macro không cần thay đổi đặc biệt.'},
+  gout:{label:'Gout',note:'Tránh purine cao. Uống ≥2.5L nước/ngày.',avoid:['Thịt bò nạc','Sườn bò','Ba chỉ heo','Sườn heo','Tôm','Cá ngừ','Cá hồi','Hạt mắc ca'],prefer:['Ức gà','Trứng gà','Đậu phụ','Khoai lang','Dưa leo','Táo','Ổi'],calAdj:0,pMult:1.2,fatPct:null,carbPct:null,macroNote:'Protein giới hạn ≤1.2g/kg — chọn nguồn protein thực vật và trứng.'},
+  cholesterol:{label:'Mỡ máu cao',note:'Giảm chất béo bão hòa, tăng omega-3 và chất xơ.',avoid:['Ba chỉ heo','Sườn heo','Sườn bò','Bơ lạt','Dầu dừa','Hạt mắc ca'],prefer:['Cá hồi','Ức gà','Hạt chia','Hạt óc chó','Dầu olive','Táo','Yến mạch'],calAdj:0,pMult:null,fatPct:20,carbPct:null,macroNote:'Chất béo giảm xuống 20% tổng calo (từ 27%). Ưu tiên chất béo không bão hòa.'},
+  kidney:{label:'Thận yếu',note:'Kiểm soát protein, kali, phốt pho theo bác sĩ.',avoid:['Protein shake','Hạt chia','Hạt óc chó','Hạnh nhân','Chuối','Cam','Cà chua'],prefer:['Cơm trắng','Bún tươi','Dưa leo','Xà lách','Bắp cải','Táo','Dưa hấu'],calAdj:0,pMult:0.8,fatPct:null,carbPct:null,macroNote:'Protein giảm xuống 0.8g/kg theo chỉ dẫn bác sĩ. Hạn chế kali và phốt pho.'},
+  liver:{label:'Gan nhiễm mỡ',note:'Giảm mỡ bão hòa và đường đơn.',avoid:['Ba chỉ heo','Sườn heo','Bơ lạt','Dầu dừa','Xoài','Nho'],prefer:['Ức gà','Cá hồi','Đậu phụ','Bông cải xanh','Dầu olive','Táo','Yến mạch'],calAdj:-100,pMult:null,fatPct:22,carbPct:null,macroNote:'Chất béo giảm xuống 22% tổng calo. Giảm thêm 100 kcal mỗi ngày.'},
+  gastric:{label:'Dạ dày / Trào ngược',note:'Chia 5–6 bữa nhỏ. Tránh cay, chua, nhiều dầu.',avoid:['Ớt chuông','Cà chua','Cam','Dứa','Ba chỉ heo','Đậu phộng'],prefer:['Cơm gạo lứt','Khoai lang','Ức gà luộc','Cá basa hấp','Dưa leo','Chuối','Sữa chua HL'],calAdj:0,pMult:null,fatPct:null,carbPct:null,macroNote:'Ăn 5–6 bữa nhỏ/ngày. Macro không cần thay đổi đặc biệt.'},
+  thyroid:{label:'Tuyến giáp (suy giáp)',note:'Trao đổi chất chậm — đã giảm calo.',avoid:['Bắp cải sống','Bông cải xanh sống'],prefer:['Cá hồi','Cá ngừ','Tôm','Trứng gà','Hạt chia','Khoai lang','Rau bina'],calAdj:-150,pMult:null,fatPct:null,carbPct:null,macroNote:'Đã giảm 150 kcal cho suy giáp. Protein và fat giữ bình thường.'},
 };
 
 const FOODS=[
@@ -492,9 +492,15 @@ function calc(){
   if(useBF){bfD.textContent=bf.toFixed(1)+'%';bfD.style.color='var(--accent)';}else{bfD.textContent='—';bfD.style.color='var(--muted)';}
   if(useSMM){smmD.textContent=smm.toFixed(1)+' kg';smmD.style.color='var(--accent)';}else{smmD.textContent='—';smmD.style.color='var(--muted)';}
   let bmr;
-  if(useSMM)bmr=370+21.6*(smm/0.56);
-  else if(useBF)bmr=370+21.6*(w*(1-bf/100));
-  else bmr=gender==='male'?10*w+6.25*h-5*a+5:10*w+6.25*h-5*a-161;
+  if(useSMM){
+    // Katch-McArdle từ SMM (chính xác nhất)
+    bmr=370+21.6*(smm/0.56);
+  } else if(useBF){
+    // Katch-McArdle từ % mỡ
+    bmr=370+21.6*(w*(1-bf/100));
+  } else {
+    bmr=gender==='male'?10*w+6.25*h-5*a+5:10*w+6.25*h-5*a-161;
+  }
   const tdee=Math.round(bmr*activity);bmr=Math.round(bmr);
   let target=tdee;
   if(goal==='lose')target=tdee-500;if(goal==='gain')target=tdee+300;
@@ -504,8 +510,24 @@ function calc(){
   document.getElementById('bmrVal').textContent=bmr;document.getElementById('tdeeVal').textContent=tdee;document.getElementById('targetVal').textContent=target;
   const tips={lose:`Ăn <strong>${target} kcal/ngày</strong>${note} — giảm ~0.5 kg mỡ/tuần.`,maintain:`Ăn đúng <strong>${target} kcal/ngày</strong>${note} để duy trì.`,gain:`Ăn <strong>${target} kcal/ngày</strong>${note} kết hợp tập tạ.`};
   document.getElementById('tipBox').innerHTML=tips[goal];
-  let pMult=2.0;activeCond.forEach(c=>{pMult=Math.min(pMult,CONDITIONS[c].pMult);});
-  const protein=Math.round(w*pMult),pKcal=protein*4,fKcal=Math.round(target*0.27),fat=Math.round(fKcal/9),cKcal=Math.max(0,target-pKcal-fKcal),carb=Math.round(cKcal/4),maxK=Math.max(pKcal,cKcal,fKcal,1);
+  // Protein: tăng theo mức hoạt động + SMM + bệnh lý
+  let baseP = activity>=1.725?2.2:activity>=1.55?2.0:activity>=1.375?1.8:1.6;
+  if(useSMM) baseP=Math.max(baseP,2.0); // có cơ nhiều → cần nhiều protein hơn
+  // Bệnh lý có pMult riêng → ghi đè baseP (chỉ bệnh lý cần thay đổi protein)
+  let condP=null;
+  activeCond.forEach(c=>{const m=CONDITIONS[c].pMult;if(m!=null){condP=condP===null?m:Math.min(condP,m);}});
+  const pMult=condP!==null?condP:baseP;
+  const protein=Math.round(w*pMult);
+  // Fat: mặc định 27%, bệnh lý có fatPct riêng → lấy thấp nhất
+  let fatPct=0.27;
+  activeCond.forEach(c=>{const fp=CONDITIONS[c].fatPct;if(fp!=null)fatPct=Math.min(fatPct,fp/100);});
+  const pKcal=protein*4,fKcal=Math.round(target*fatPct),fat=Math.round(fKcal/9);
+  // Carb: phần còn lại (trừ protein và fat), có thể bị giới hạn bởi bệnh lý
+  let carbPctCap=null;
+  activeCond.forEach(c=>{const cp=CONDITIONS[c].carbPct;if(cp!=null)carbPctCap=carbPctCap===null?cp:Math.min(carbPctCap,cp);});
+  let cKcal=Math.max(0,target-pKcal-fKcal);
+  if(carbPctCap!=null) cKcal=Math.min(cKcal,Math.round(target*carbPctCap/100));
+  const carb=Math.round(cKcal/4),maxK=Math.max(pKcal,cKcal,fKcal,1);
   document.getElementById('tpG').textContent=protein+'g';document.getElementById('tpKcal').textContent=pKcal+' kcal';document.getElementById('tpBar').style.width=Math.round(pKcal/maxK*100)+'%';
   document.getElementById('tcG').textContent=carb+'g';document.getElementById('tcKcal').textContent=cKcal+' kcal';document.getElementById('tcBar').style.width=Math.round(cKcal/maxK*100)+'%';
   document.getElementById('tfG').textContent=fat+'g';document.getElementById('tfKcal').textContent=fKcal+' kcal';document.getElementById('tfBar').style.width=Math.round(fKcal/maxK*100)+'%';
