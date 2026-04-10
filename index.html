@@ -126,9 +126,9 @@ hr{border:none;border-top:1px solid var(--border);margin:.9rem 0}
 .btn-add{width:100%;display:flex;align-items:center;justify-content:center;gap:6px;padding:9px;background:var(--surface);border:1.5px dashed var(--border);border-radius:10px;color:var(--muted);font-family:'Sora',sans-serif;font-size:12px;cursor:pointer;transition:all .15s}
 .btn-add:hover{border-color:var(--accent);color:var(--accent)}
 /* PICKER SHEET */
-.picker-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:flex-end;justify-content:center}
-.picker-overlay.open{display:flex}
-.picker-sheet{background:var(--card);border-radius:20px 20px 0 0;width:100%;max-width:760px;max-height:85vh;display:flex;flex-direction:column;overflow:hidden}
+.picker-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;justify-content:center}
+.picker-overlay.open{display:flex;align-items:flex-end}
+.picker-sheet{background:var(--card);border-radius:20px 20px 0 0;width:100%;max-width:760px;height:82vh;display:flex;flex-direction:column;overflow:hidden}
 .picker-top{padding:1rem 1.1rem .6rem;border-bottom:1px solid var(--border);flex-shrink:0}
 .picker-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:.7rem}
 .picker-search{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 12px;color:var(--text);font-family:'Sora',sans-serif;font-size:13px;outline:none;margin-bottom:.6rem}
@@ -676,21 +676,132 @@ function maybeClose(e){if(e.target===document.getElementById('pickerOverlay'))cl
 
 function renderPickerCats(){
   var el=document.getElementById('pickerCats');el.innerHTML='';
-  CATS.forEach(function(c){var b=document.createElement('button');b.className='cat-pill'+(c===pickerCat?' on':'');b.textContent=c;b.onclick=function(){pickerCat=c;renderPickerCats();renderPickerList();};el.appendChild(b);});
+  CATS.forEach(function(c){
+    var b=document.createElement('button');
+    b.className='cat-pill'+(c===pickerCat?' on':'');
+    b.textContent=c;
+    b.onclick=function(){
+      pickerCat=c;
+      // save scroll position before re-render to prevent jump
+      var listEl=document.getElementById('pickerList');
+      var savedScroll=listEl.scrollTop;
+      renderPickerCats();
+      renderPickerList();
+      listEl.scrollTop=0; // go to top of new category — expected behaviour
+    };
+    el.appendChild(b);
+  });
 }
+
+function getPreferSet(){
+  var s=new Set();
+  // from adult conditions
+  activeCond.forEach(function(c){
+    if(CONDITIONS[c]&&CONDITIONS[c].prefer){
+      CONDITIONS[c].prefer.forEach(function(f){s.add(f);});
+    }
+  });
+  // child obesity prefer foods
+  if(ageMode==='child'&&childObese){
+    var a=+document.getElementById('age').value;
+    var childPrefer=a<6
+      ?['Rau muống','Bông cải xanh','Cá basa','Ức gà','Trứng gà','Dưa leo','Táo','Dưa hấu']
+      :a<12
+      ?['Cơm gạo lứt','Khoai lang','Ức gà','Cá basa','Trứng gà','Bông cải xanh','Táo','Ổi','Sữa chua không đường','Đậu phụ']
+      :['Cơm gạo lứt','Khoai lang','Yến mạch','Ức gà','Cá hồi','Cá basa','Trứng gà','Đậu phụ','Bông cải xanh','Táo','Ổi','Sữa chua Hy Lạp','Edamame (đậu nhật luộc)'];
+    childPrefer.forEach(function(f){s.add(f);});
+  }
+  return s;
+}
+
 function renderPickerList(){
   var q=document.getElementById('pickerSearch').value.toLowerCase();
   var avoid=getAvoidSet();
-  var list=FOODS.filter(function(f){return(pickerCat==='Tất cả'||f.cat===pickerCat)&&(f.name.toLowerCase().includes(q)||f.cat.toLowerCase().includes(q));});
+  var prefer=getPreferSet();
+  var hasFilters=activeCond.size>0||(ageMode==='child'&&childObese);
+
+  var list=FOODS.filter(function(f){
+    return(pickerCat==='Tất cả'||f.cat===pickerCat)&&(f.name.toLowerCase().includes(q)||f.cat.toLowerCase().includes(q));
+  });
+
+  // sort: prefer first, avoid last (only when filters active)
+  if(hasFilters){
+    list.sort(function(a,b){
+      var ap=prefer.has(a.name)?0:avoid.has(a.name)?2:1;
+      var bp=prefer.has(b.name)?0:avoid.has(b.name)?2:1;
+      return ap-bp;
+    });
+  }
+
   var el=document.getElementById('pickerList');
   if(!list.length){el.innerHTML='<div style="font-size:12px;color:var(--muted);text-align:center;padding:2rem 0">Không tìm thấy</div>';return;}
-  el.innerHTML='';
+
+  // build fragment to avoid reflow jump
+  var frag=document.createDocumentFragment();
+
+  // section headers only when filters active and we have prefer/avoid items
+  var shownPreferHeader=false,shownNormalHeader=false,shownAvoidHeader=false;
+
   list.forEach(function(f){
-    var warned=avoid.has(f.name);
-    var div=document.createElement('div');div.className='picker-item';
-    div.innerHTML='<div class="pi-info"><div class="pi-name">'+f.name+(warned?'<span class="pi-warn">⚠ nên tránh</span>':'')+'</div><div class="pi-sub">'+f.cat+' · '+f.per+' · P:'+f.p+'g C:'+f.c+'g F:'+f.f+'g</div></div><div class="pi-kcal">'+f.kcal+'<br><span style="font-size:9px;color:var(--muted)">kcal</span></div>';
-    div.onclick=function(){selectFood(f);};el.appendChild(div);
+    var isPrefer=hasFilters&&prefer.has(f.name);
+    var isAvoid=hasFilters&&avoid.has(f.name);
+    var tier=isPrefer?0:isAvoid?2:1;
+
+    // insert dividers
+    if(hasFilters){
+      if(tier===0&&!shownPreferHeader){
+        shownPreferHeader=true;
+        var hd=document.createElement('div');
+        hd.style.cssText='font-family:DM Mono,monospace;font-size:9px;letter-spacing:.1em;color:#4fffb0;text-transform:uppercase;padding:8px 0 4px;margin-bottom:2px;border-bottom:1px solid rgba(79,255,176,.15)';
+        hd.textContent='✓ Ưu tiên — nên ăn';
+        frag.appendChild(hd);
+      }
+      if(tier===1&&!shownNormalHeader&&shownPreferHeader){
+        shownNormalHeader=true;
+        var hd2=document.createElement('div');
+        hd2.style.cssText='font-family:DM Mono,monospace;font-size:9px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;padding:8px 0 4px;margin-bottom:2px;border-bottom:1px solid var(--border)';
+        hd2.textContent='Bình thường';
+        frag.appendChild(hd2);
+      }
+      if(tier===2&&!shownAvoidHeader){
+        shownAvoidHeader=true;
+        var hd3=document.createElement('div');
+        hd3.style.cssText='font-family:DM Mono,monospace;font-size:9px;letter-spacing:.1em;color:#ff6b6b;text-transform:uppercase;padding:8px 0 4px;margin-bottom:2px;border-bottom:1px solid rgba(255,107,107,.2)';
+        hd3.textContent='⚠ Nên hạn chế / tránh';
+        frag.appendChild(hd3);
+      }
+    }
+
+    var div=document.createElement('div');
+    // card bg tint based on status
+    var bgTint=isPrefer?'rgba(79,255,176,.04)':isAvoid?'rgba(255,107,107,.04)':'transparent';
+    var borderLeft=isPrefer?'3px solid #4fffb0':isAvoid?'3px solid #ff6b6b':'3px solid transparent';
+    div.style.cssText='display:flex;align-items:center;gap:10px;padding:10px 8px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s;background:'+bgTint+';border-left:'+borderLeft+';margin:0 -1.1rem;padding-left:calc(1.1rem + 5px)';
+    div.onmouseover=function(){this.style.background=isPrefer?'rgba(79,255,176,.09)':isAvoid?'rgba(255,107,107,.09)':'rgba(255,255,255,.03)';};
+    div.onmouseout=function(){this.style.background=bgTint;};
+
+    var nameColor=isPrefer?'#4fffb0':isAvoid?'#ff6b6b':'var(--text)';
+    var badge=isPrefer
+      ?'<span style="font-size:9px;background:rgba(79,255,176,.15);color:#4fffb0;border-radius:4px;padding:1px 5px;margin-left:5px;font-family:DM Mono,monospace">Ưu tiên</span>'
+      :isAvoid
+      ?'<span style="font-size:9px;background:rgba(255,107,107,.15);color:#ff6b6b;border-radius:4px;padding:1px 5px;margin-left:5px;font-family:DM Mono,monospace">Nên tránh</span>'
+      :'';
+
+    div.innerHTML=
+      '<div style="flex:1;min-width:0">'+
+        '<div style="font-size:13px;font-weight:600;color:'+nameColor+';display:flex;align-items:center;flex-wrap:wrap;gap:2px">'+f.name+badge+'</div>'+
+        '<div style="font-size:10px;color:var(--muted);margin-top:2px">'+f.cat+' · '+f.per+' · P:'+f.p+'g C:'+f.c+'g F:'+f.f+'g</div>'+
+      '</div>'+
+      '<div style="font-family:DM Mono,monospace;font-size:13px;font-weight:500;color:'+(isPrefer?'#4fffb0':isAvoid?'#ff6b6b':'var(--accent)')+';min-width:52px;text-align:right">'+
+        f.kcal+'<br><span style="font-size:9px;color:var(--muted)">kcal</span>'+
+      '</div>';
+
+    (function(food){div.onclick=function(){selectFood(food);};})(f);
+    frag.appendChild(div);
   });
+
+  el.innerHTML='';
+  el.appendChild(frag);
 }
 function selectFood(f){
   if(pickerSwapItemId!=null){var e=mealLog.find(function(x){return x.itemId===pickerSwapItemId;});if(e)e.foodName=f.name;}
