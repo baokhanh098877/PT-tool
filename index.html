@@ -173,7 +173,17 @@ footer{text-align:center;margin-top:2rem;font-size:10px;color:var(--muted);font-
       <div class="panel">
         <p class="ptitle">Đối tượng</p>
         <div class="mode-tabs"><button class="mode-tab on" id="mtab-adult" onclick="setMode('adult')">Người lớn (≥18 tuổi)</button><button class="mode-tab" id="mtab-child" onclick="setMode('child')">Trẻ em &amp; Vị thành niên (&lt;18)</button></div>
-        <div id="childNotice" style="display:none" class="tip-info">Công thức <strong>Schofield</strong> cho trẻ 2–17 tuổi. Không áp dụng giảm calo mạnh cho trẻ &lt;12.</div>
+        <div id="childNotice" style="display:none">
+          <div class="tip-info" style="margin-bottom:.7rem">Công thức <strong>Schofield</strong> cho trẻ 2–17 tuổi. Khuyến nghị kết hợp bác sĩ nhi khoa.</div>
+          <div id="childObesityPanel" style="display:none;background:rgba(255,107,107,.05);border:1px solid rgba(255,107,107,.25);border-radius:11px;padding:11px 13px;margin-bottom:.5rem">
+            <div style="font-size:12px;font-weight:600;color:var(--danger);margin-bottom:6px">⚠ Chế độ béo phì trẻ em</div>
+            <div id="childObesityInfo" style="font-size:11px;color:var(--muted);line-height:1.7"></div>
+          </div>
+          <label class="chk-row" style="margin-bottom:0">
+            <input class="chk-box" type="checkbox" id="chk-obesity" onchange="toggleChildObesity()">
+            <span class="chk-label" id="lbl-obesity">Trẻ bị béo phì / thừa cân</span>
+          </label>
+        </div>
       </div>
       <div class="panel">
         <p class="ptitle">Thông số cơ bản</p>
@@ -191,8 +201,8 @@ footer{text-align:center;margin-top:2rem;font-size:10px;color:var(--muted);font-
       </div>
       <div class="panel">
         <p class="ptitle">Mục tiêu</p>
-        <div class="goal-group"><button class="goal-btn" id="g-lose" onclick="setGoal('lose')"><span class="gi">🔥</span>Giảm mỡ<span class="gd">−500 kcal</span></button><button class="goal-btn on" id="g-maintain" onclick="setGoal('maintain')"><span class="gi">⚖️</span>Duy trì<span class="gd">= TDEE</span></button><button class="goal-btn" id="g-gain" onclick="setGoal('gain')"><span class="gi">💪</span>Tăng cơ<span class="gd">+300 kcal</span></button></div>
-        <div id="childGoalNote" style="display:none;margin-bottom:.8rem" class="tip-warn"><strong>Lưu ý:</strong> Không áp dụng chế độ giảm calo mạnh cho trẻ dưới 12 tuổi.</div>
+        <div class="goal-group"><button class="goal-btn" id="g-lose" onclick="setGoal('lose')"><span class="gi">🔥</span><span id="g-lose-label">Giảm mỡ</span><span class="gd" id="g-lose-sub">−500 kcal</span></button><button class="goal-btn on" id="g-maintain" onclick="setGoal('maintain')"><span class="gi">⚖️</span>Duy trì<span class="gd">= TDEE</span></button><button class="goal-btn" id="g-gain" onclick="setGoal('gain')"><span class="gi">💪</span>Tăng cơ<span class="gd">+300 kcal</span></button></div>
+        <div id="childGoalNote" style="display:none;margin-bottom:.8rem" class="tip-warn"><strong>Lưu ý:</strong> Với trẻ bình thường không nên giảm calo. Chỉ tick "Béo phì" ở trên để mở chế độ giảm cân phù hợp theo độ tuổi.</div>
         <div class="res-grid rg3"><div class="rcard"><p class="rlabel">BMR</p><p class="rval" id="bmrVal">—</p><p class="runit">kcal/ngày</p></div><div class="rcard"><p class="rlabel">TDEE</p><p class="rval" id="tdeeVal">—</p><p class="runit">kcal/ngày</p></div><div class="rcard hi"><p class="rlabel">Mục tiêu</p><p class="rval" id="targetVal">—</p><p class="runit">kcal/ngày</p></div></div>
         <div class="tip-box tip-green" id="tipBox"></div>
       </div>
@@ -259,7 +269,7 @@ footer{text-align:center;margin-top:2rem;font-size:10px;color:var(--muted);font-
 </div>
 <script>
 var gender='male',activity=1.375,goal='maintain',ageMode='adult';
-var useBF=false,useSMM=false;
+var useBF=false,useSMM=false,childObese=false;
 var activeCond=new Set();
 var macroTargets={p:0,c:0,f:0};
 var tdeeTarget=1600;
@@ -440,13 +450,82 @@ function setMode(m){
   document.getElementById('condPanel').style.display=m==='child'?'none':'block';
   document.getElementById('modeLabel').textContent=m==='adult'?'Người lớn':'Trẻ em';
   var el=document.getElementById('age'),rl=document.getElementById('ageRangeLabel');
-  if(m==='child'){el.min=2;el.max=17;if(+el.value>17)el.value=12;if(+el.value<2)el.value=2;rl.innerHTML='<span>2</span><span>17</span>';document.getElementById('g-lose').style.opacity='0.4';document.getElementById('g-lose').disabled=true;document.getElementById('childGoalNote').style.display='block';}
-  else{el.min=18;el.max=65;if(+el.value<18)el.value=22;rl.innerHTML='<span>18</span><span>65</span>';document.getElementById('g-lose').style.opacity='1';document.getElementById('g-lose').disabled=false;document.getElementById('childGoalNote').style.display='none';}
+  if(m==='child'){
+    el.min=2;el.max=17;if(+el.value>17)el.value=12;if(+el.value<2)el.value=2;
+    rl.innerHTML='<span>2</span><span>17</span>';
+    // reset obesity
+    childObese=false;
+    document.getElementById('chk-obesity').checked=false;
+    document.getElementById('lbl-obesity').classList.remove('on');
+    document.getElementById('childObesityPanel').style.display='none';
+    // disable lose by default (until obesity ticked)
+    document.getElementById('g-lose').style.opacity='0.35';
+    document.getElementById('g-lose').disabled=true;
+    document.getElementById('childGoalNote').style.display='block';
+    // reset goal to maintain for children
+    if(goal==='lose'){goal='maintain';['lose','maintain','gain'].forEach(function(x){document.getElementById('g-'+x).classList.remove('on');});document.getElementById('g-maintain').classList.add('on');}
+    document.getElementById('g-lose-label').textContent='Giảm mỡ';
+    document.getElementById('g-lose-sub').textContent='−500 kcal';
+  } else {
+    el.min=18;el.max=65;if(+el.value<18)el.value=22;
+    rl.innerHTML='<span>18</span><span>65</span>';
+    document.getElementById('g-lose').style.opacity='1';
+    document.getElementById('g-lose').disabled=false;
+    document.getElementById('childGoalNote').style.display='none';
+    document.getElementById('g-lose-label').textContent='Giảm mỡ';
+    document.getElementById('g-lose-sub').textContent='−500 kcal';
+  }
   calc();
 }
 function setGender(g){gender=g;document.getElementById('btn-male').classList.toggle('on',g==='male');document.getElementById('btn-female').classList.toggle('on',g==='female');calc();}
 function setAct(btn){activity=parseFloat(btn.dataset.act);document.querySelectorAll('[data-act]').forEach(function(b){b.classList.remove('on');});btn.classList.add('on');calc();}
-function setGoal(g){if(ageMode==='child'&&g==='lose')return;goal=g;['lose','maintain','gain'].forEach(function(x){document.getElementById('g-'+x).classList.remove('on');});document.getElementById('g-'+g).classList.add('on');calc();}
+function setGoal(g){if(ageMode==='child'&&g==='lose'&&!childObese)return;goal=g;['lose','maintain','gain'].forEach(function(x){document.getElementById('g-'+x).classList.remove('on');});document.getElementById('g-'+g).classList.add('on');calc();}
+
+function toggleChildObesity(){
+  childObese=document.getElementById('chk-obesity').checked;
+  document.getElementById('lbl-obesity').classList.toggle('on',childObese);
+  var a=+document.getElementById('age').value;
+  var loseBtn=document.getElementById('g-lose');
+  var panel=document.getElementById('childObesityPanel');
+  var infoEl=document.getElementById('childObesityInfo');
+  var noteEl=document.getElementById('childGoalNote');
+  if(childObese){
+    loseBtn.style.opacity='1';loseBtn.disabled=false;
+    panel.style.display='block';
+    noteEl.style.display='none';
+    // Set label & deficit based on age group
+    var defLabel,defKcal,info;
+    if(a<6){
+      defLabel='Duy trì cân nặng';defKcal=0;
+      document.getElementById('g-lose-label').textContent='Duy trì cân';
+      document.getElementById('g-lose-sub').textContent='Không tăng thêm';
+      info='<b style="color:var(--danger)">Dưới 6 tuổi:</b> Không giảm calo. Mục tiêu là <b>giữ nguyên cân nặng</b> trong khi chiều cao tăng tự nhiên — tỷ lệ mỡ/cơ sẽ tự cải thiện theo thời gian. Tập trung vào chất lượng thực phẩm và tăng vận động.';
+    } else if(a<12){
+      defKcal=-150;
+      document.getElementById('g-lose-label').textContent='Giảm nhẹ';
+      document.getElementById('g-lose-sub').textContent='−150 kcal/ngày';
+      info='<b style="color:var(--danger)">6–11 tuổi:</b> Giảm tối đa <b>~0.5 kg/tháng</b> là an toàn. Cắt giảm nhẹ ~150 kcal/ngày — không cắt mạnh. Đảm bảo đủ protein (1.2g/kg), canxi và vi chất cho phát triển xương. Tăng vận động thể chất ít nhất 60 phút/ngày.';
+    } else {
+      defKcal=-300;
+      document.getElementById('g-lose-label').textContent='Giảm vừa';
+      document.getElementById('g-lose-sub').textContent='−300 kcal/ngày';
+      info='<b style="color:var(--danger)">12–17 tuổi:</b> Giảm tối đa <b>0.5–1 kg/tuần</b>. Cắt giảm ~300 kcal/ngày — thấp hơn người lớn để bảo vệ tăng trưởng. Protein 1.2–1.5g/kg, bổ sung đủ canxi (dậy thì cần nhiều). Kết hợp tập thể dục 60+ phút/ngày.';
+    }
+    infoEl.innerHTML=info+'<br><span style="color:var(--amber);font-size:10px">⚠ Nên có sự giám sát của bác sĩ nhi khoa hoặc chuyên gia dinh dưỡng nhi.</span>';
+    // store deficit for calc
+    window._childObeseDeficit=defKcal;
+  } else {
+    loseBtn.style.opacity='0.35';loseBtn.disabled=true;
+    panel.style.display='none';
+    noteEl.style.display='block';
+    document.getElementById('g-lose-label').textContent='Giảm mỡ';
+    document.getElementById('g-lose-sub').textContent='−500 kcal';
+    window._childObeseDeficit=0;
+    // reset goal if was lose
+    if(goal==='lose'){goal='maintain';['lose','maintain','gain'].forEach(function(x){document.getElementById('g-'+x).classList.remove('on');});document.getElementById('g-maintain').classList.add('on');}
+  }
+  calc();
+}
 function toggleOpt(type){var chk=document.getElementById('chk-'+type),slider=document.getElementById(type==='bf'?'bodyfat':'smm'),lbl=document.getElementById('lbl-'+type),on=chk.checked;if(type==='bf')useBF=on;else useSMM=on;slider.disabled=!on;lbl.classList.toggle('on',on);calc();document.getElementById('bodyPanel').style.display=(useBF||useSMM)?'block':'none';}
 
 function schofieldBMR(age,w,male){if(male){if(age<3)return 0.167*w*240+1517;if(age<10)return 19.59*w+130.3;return 16.25*w+137.2;}else{if(age<3)return 16.97*w+161.8;if(age<10)return 16.97*w+161.8;return 8.365*w+465;}}
@@ -455,6 +534,11 @@ function calc(){
   var w=+document.getElementById('weight').value,h=+document.getElementById('height').value,a=+document.getElementById('age').value;
   var bf=+document.getElementById('bodyfat').value,smm=+document.getElementById('smm').value;
   document.getElementById('wVal').textContent=w;document.getElementById('hVal').textContent=h;document.getElementById('aVal').textContent=a;
+  // refresh child obesity deficit if age changed
+  if(ageMode==='child'&&childObese){
+    var _def=a<6?0:a<12?-150:-300;
+    if(window._childObeseDeficit!==_def){window._childObeseDeficit=_def;toggleChildObesity();}
+  }
   var bfD=document.getElementById('bfDisp'),smmD=document.getElementById('smmDisp');
   if(useBF){bfD.textContent=bf.toFixed(1)+'%';bfD.style.color='var(--accent)';}else{bfD.textContent='—';bfD.style.color='var(--muted)';}
   if(useSMM){smmD.textContent=smm.toFixed(1)+' kg';smmD.style.color='var(--accent)';}else{smmD.textContent='—';smmD.style.color='var(--muted)';}
@@ -465,14 +549,27 @@ function calc(){
   else bmr=gender==='male'?10*w+6.25*h-5*a+5:10*w+6.25*h-5*a-161;
   var tdee=Math.round(bmr*activity);bmr=Math.round(bmr);
   var target=tdee;
-  if(goal==='lose'&&ageMode!=='child')target=tdee-500;if(goal==='gain')target=tdee+300;
+  if(goal==='lose'){
+    if(ageMode==='child'&&childObese){target=tdee+(window._childObeseDeficit||0);}
+    else if(ageMode!=='child'){target=tdee-500;}
+  }
+  if(goal==='gain')target=tdee+300;
   var calAdj=0;activeCond.forEach(function(c){calAdj+=(CONDITIONS[c].calAdj||0);});
   target+=calAdj;target=Math.max(ageMode==='child'?1000:1200,target);tdeeTarget=target;
   document.getElementById('bmrVal').textContent=bmr;document.getElementById('tdeeVal').textContent=tdee;document.getElementById('targetVal').textContent=target;
   var note=calAdj?' <span style="font-size:10px;color:var(--amber)">('+( calAdj>0?'+':'')+calAdj+')</span>':'';
-  var tips={lose:'Ăn <strong>'+target+' kcal/ngày</strong>'+note+' — giảm ~0.5 kg mỡ/tuần.',maintain:'Ăn đúng <strong>'+target+' kcal/ngày</strong>'+note+' để duy trì.',gain:ageMode==='child'?'Đảm bảo <strong>'+target+' kcal/ngày</strong> cho tăng trưởng.':'Ăn <strong>'+target+' kcal/ngày</strong>'+note+' kết hợp tập tạ.'};
+  var loseChildTip=ageMode==='child'&&childObese?
+    (a<6?'Giữ nguyên <strong>'+target+' kcal/ngày</strong> — không tăng thêm. Tăng vận động và cải thiện chất lượng bữa ăn.':
+     a<12?'Ăn <strong>'+target+' kcal/ngày</strong> — giảm nhẹ ~0.5 kg/tháng. Đảm bảo đủ dinh dưỡng tăng trưởng.':
+     'Ăn <strong>'+target+' kcal/ngày</strong> — giảm vừa phải, kết hợp vận động 60+ phút/ngày.')
+    :'';
+  var tips={
+    lose: ageMode==='child'&&childObese ? loseChildTip : 'Ăn <strong>'+target+' kcal/ngày</strong>'+note+' — giảm ~0.5 kg mỡ/tuần.',
+    maintain: ageMode==='child'?'Đảm bảo <strong>'+target+' kcal/ngày</strong> cho tăng trưởng tự nhiên.':'Ăn đúng <strong>'+target+' kcal/ngày</strong>'+note+' để duy trì.',
+    gain: ageMode==='child'?'Tăng trưởng tự nhiên <strong>'+target+' kcal/ngày</strong> — đủ dinh dưỡng cho phát triển.':'Ăn <strong>'+target+' kcal/ngày</strong>'+note+' kết hợp tập tạ.'
+  };
   document.getElementById('tipBox').innerHTML=tips[goal];
-  var baseP=ageMode==='child'?1.0:activity>=1.725?2.2:activity>=1.55?2.0:activity>=1.375?1.8:1.6;
+  var baseP=ageMode==='child'?(childObese?1.2:1.0):activity>=1.725?2.2:activity>=1.55?2.0:activity>=1.375?1.8:1.6;
   if(useSMM&&ageMode!=='child')baseP=Math.max(baseP,2.0);
   var condP=null;activeCond.forEach(function(c){var m=CONDITIONS[c].pMult;if(m!=null){condP=condP===null?m:Math.min(condP,m);}});
   var pMult=condP!==null?condP:baseP;var protein=Math.round(w*pMult);
